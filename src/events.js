@@ -1,15 +1,15 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification } from './utils.js';
-import { navigateImage, saveCurrentAnnotation } from './file.js';
+import { navigateImage, saveCurrentAnnotation, handleConfigFile, handleDirectorySelection } from './file.js';
 import { showDeleteConfirmModal } from './modal.js';
 
 export function initializeEventListeners() {
     ui.btnLoadConfig.addEventListener('click', () => ui.configLoader.click());
-    ui.configLoader.addEventListener('change', import('./file.js').then(module => module.handleConfigFile));
+    ui.configLoader.addEventListener('change', handleConfigFile);
     ui.btnLoadDir.addEventListener('click', () => ui.dirLoader.click());
-    ui.dirLoader.addEventListener('change', import('./file.js').then(module => module.handleDirectorySelection));
+    ui.dirLoader.addEventListener('change', handleDirectorySelection);
     ui.btnSave.addEventListener('click', saveCurrentAnnotation);
     ui.btnPrev.addEventListener('click', () => navigateImage(-1));
     ui.btnNext.addEventListener('click', () => navigateImage(1));
@@ -226,7 +226,7 @@ function handleWheelZoom(e) {
     state.transform.offsetY = pos.y - worldPos.y * state.transform.scale;
 
     redrawCanvas();
-    import('./ui.js').then(module => module.updateInfoBarUI());
+    updateInfoBarUI();
 }
 
 export function enterBboxDrawingMode(forObjectIndex = -1) {

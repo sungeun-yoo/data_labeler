@@ -44,7 +44,7 @@ export function updateAllUI() {
     updateModeIndicatorUI();
 }
 
-function updateModeIndicatorUI() {
+export function updateModeIndicatorUI() {
     const indicator = ui.modeIndicator;
     indicator.classList.remove('bg-yellow-500', 'text-black');
     indicator.style.backgroundColor = '';
@@ -64,7 +64,7 @@ function updateModeIndicatorUI() {
     }
 }
 
-function updateHelpUI() {
+export function updateHelpUI() {
     const showHelp = !state.config || state.imageFiles.length === 0;
     ui.configHelp.classList.toggle('hidden', !showHelp);
     ui.objectListWrapper.classList.toggle('hidden', showHelp);
@@ -92,7 +92,7 @@ function updateHelpUI() {
     }
 }
 
-function updateObjectListUI() {
+export function updateObjectListUI() {
     ui.objectListWrapper.innerHTML = '';
     const objects = state.annotationData[state.imageFiles[state.currentImageIndex]?.name]?.objects || [];
     if (objects.length === 0) {
@@ -111,7 +111,7 @@ function updateObjectListUI() {
     });
 }
 
-function updateDetailsPanelUI() {
+export function updateDetailsPanelUI() {
     if (state.appState.selectedObjectIndex === -1) {
         ui.detailsWrapper.classList.add('hidden');
         return;
@@ -134,7 +134,7 @@ function updateDetailsPanelUI() {
     updateKeypointListUI();
 }
 
-function updateBboxInfoUI() {
+export function updateBboxInfoUI() {
     const bboxInfoEl = document.getElementById('bbox-info');
     if (!bboxInfoEl) return;
 
@@ -180,7 +180,7 @@ function updateBboxInfoUI() {
     });
 }
 
-function updateKeypointListUI() {
+export function updateKeypointListUI() {
     const keypointListEl = document.getElementById('keypoint-list');
     if (!keypointListEl) return;
     keypointListEl.innerHTML = '';
