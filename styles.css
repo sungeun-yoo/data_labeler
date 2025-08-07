@@ -60,6 +60,17 @@ body {
 .col-coords { flex: 1 1 auto; }
 .col-vis { flex: 0 0 150px; text-align: center; }
 
+.gutter {
+    background-color: var(--md-sys-color-outline-variant);
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bM/5+hQ4g5w5vN7Ww2E8MZFwBigAkAAD1sYkGPEpC9AAAAAElFTkSuQmCC');
+    cursor: col-resize;
+}
+
 input[type=number] {
     background-color: var(--md-sys-color-surface-container-low);
     border: 1px solid var(--md-sys-color-outline-variant); border-radius: 4px;

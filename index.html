@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pose Estimation 라벨링 툴 (Material Design 3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/split.js/dist/split.min.js"></script>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -32,16 +33,16 @@
     </header>
 
     <!-- 메인 컨텐츠 영역 -->
-    <div class="flex-grow flex p-4 gap-4 overflow-hidden">
+    <div id="split-container" class="flex-grow flex p-4 gap-4 overflow-hidden">
         <!-- 중앙 캔버스 -->
-        <main id="canvas-wrapper" class="flex-grow rounded-2xl shadow-lg flex items-center justify-center overflow-hidden relative" style="background-color: #000;">
+        <main id="split-0" class="rounded-2xl shadow-lg flex items-center justify-center overflow-hidden relative" style="background-color: #000;">
             <canvas id="mainCanvas" class="rounded-md shadow-inner"></canvas>
             <div id="mode-indicator" class="absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded hidden"></div>
             <div id="canvas-loader" class="absolute inset-0 bg-black bg-opacity-50 flex-col items-center justify-center text-white text-lg hidden"></div>
         </main>
 
         <!-- 오른쪽 패널 -->
-        <aside class="w-2/5 rounded-2xl shadow-lg flex flex-col" style="background-color: var(--md-sys-color-surface-container);">
+        <aside id="split-1" class="rounded-2xl shadow-lg flex flex-col" style="background-color: var(--md-sys-color-surface-container);">
             <div class="p-4 border-b space-y-4" style="border-color: var(--md-sys-color-outline-variant);">
                 <div id="class-selector-wrapper" class="hidden">
                     <label for="class-selector" class="block text-sm font-medium mb-1">새 객체 클래스</label>
