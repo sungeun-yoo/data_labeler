@@ -83,7 +83,7 @@ body {
     position: absolute;
     z-index: 1;
     bottom: 125%;
-    left: -120px;
+    left: -140px;
     opacity: 0;
     transition: opacity 0.3s;
     white-space: normal;
@@ -107,6 +107,7 @@ body {
 
 .details-scroll-container {
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .details-scroll-container::-webkit-scrollbar {
