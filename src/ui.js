@@ -16,7 +16,7 @@ export function initUI() {
         imageProgress: document.getElementById('imageProgress'),
         canvas: document.getElementById('mainCanvas'),
         ctx: document.getElementById('mainCanvas').getContext('2d'),
-        canvasWrapper: document.getElementById('canvas-wrapper'),
+        canvasWrapper: document.getElementById('split-0'),
         canvasLoader: document.getElementById('canvas-loader'),
         btnAddObject: document.getElementById('btnAddObject'),
         configHelp: document.getElementById('config-help'),
