@@ -48,6 +48,74 @@ body {
 .object-item.selected { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 .keypoint-item.selected { background-color: var(--md-sys-color-surface-container-high); }
 
+.keypoint-header {
+    display: flex;
+    align-items: center;
+    color: var(--md-sys-color-on-surface-variant);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    margin-bottom: 4px;
+}
+
+.col-label { flex: 0 0 120px; padding-right: 8px; }
+.col-coords { flex: 1 1 auto; }
+.col-vis {
+    flex: 0 0 150px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip {
+    visibility: hidden;
+    width: 220px;
+    background-color: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    text-align: left;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -110px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--md-sys-color-surface-container-low) transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.gutter {
+    background-color: var(--md-sys-color-outline-variant);
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bM/5+hQ4g5w5vN7Ww2E8MZFwBigAkAAD1sYkGPEpC9AAAAAElFTkSuQmCC');
+    cursor: col-resize;
+}
+
 input[type=number] {
     background-color: var(--md-sys-color-surface-container-low);
     border: 1px solid var(--md-sys-color-outline-variant); border-radius: 4px;

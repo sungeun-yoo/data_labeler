@@ -16,7 +16,7 @@ export function initUI() {
         imageProgress: document.getElementById('imageProgress'),
         canvas: document.getElementById('mainCanvas'),
         ctx: document.getElementById('mainCanvas').getContext('2d'),
-        canvasWrapper: document.getElementById('canvas-wrapper'),
+        canvasWrapper: document.getElementById('split-0'),
         canvasLoader: document.getElementById('canvas-loader'),
         btnAddObject: document.getElementById('btnAddObject'),
         configHelp: document.getElementById('config-help'),
@@ -244,13 +244,32 @@ export function updateKeypointListUI(obj) {
         return;
     }
 
+    const header = document.createElement('div');
+    header.className = 'keypoint-header p-2 text-xs font-bold';
+    header.innerHTML = `
+        <span class="col-label">라벨</span>
+        <span class="col-coords">좌표</span>
+        <span class="col-vis">
+            Visibility
+            <div class="tooltip-container">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.546-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div class="tooltip">
+                    <p><b>0:</b> 없음 (이미지 영역 밖에 있거나 없음)</p>
+                    <p><b>1:</b> 가려짐 (다른 물체에 의해 가려졌지만 위치 추정 가능)</p>
+                    <p><b>2:</b> 보임 (이미지 영역 안에서 명확하게 보임)</p>
+                </div>
+            </div>
+        </span>
+    `;
+    keypointListEl.appendChild(header);
+
     const points = obj.keypoints;
     const labels = state.config[obj.className].labels;
 
     labels.forEach((label, index) => {
         const point = points[index];
         const item = document.createElement('div');
-        item.className = 'keypoint-item p-2 text-xs rounded-lg cursor-pointer transition-colors space-y-2';
+        item.className = 'keypoint-item p-2 text-xs rounded-lg cursor-pointer transition-colors flex items-center';
         if (index === state.appState.selectedPointIndex) item.classList.add('selected');
 
         const visibilityRadios = [0, 1, 2].map(v => `
@@ -261,20 +280,14 @@ export function updateKeypointListUI(obj) {
         `).join('');
 
         item.innerHTML = `
-            <div class="flex justify-between items-center">
-                <span class="font-semibold">${index + 1}. ${label}</span>
+            <span class="col-label font-semibold truncate">${index + 1}. ${label}</span>
+            <div class="col-coords flex items-center gap-1">
+                <span class="text-gray-400">X:</span>
+                <input type="number" value="${point.x.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
+                <span class="text-gray-400">Y:</span>
+                <input type="number" value="${point.y.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
             </div>
-            <div class="grid grid-cols-2 gap-x-2 gap-y-1">
-                <div class="flex items-center">
-                    <span class="mr-1 text-gray-400">X:</span>
-                    <input type="number" value="${point.x.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
-                </div>
-                <div class="flex items-center">
-                    <span class="mr-1 text-gray-400">Y:</span>
-                    <input type="number" value="${point.y.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
-                </div>
-            </div>
-            <div class="flex justify-around items-center pt-1">
+            <div class="col-vis flex justify-around items-center">
                 ${visibilityRadios}
             </div>
         `;
