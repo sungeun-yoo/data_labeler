@@ -148,6 +148,23 @@ function handleMouseDown(e) {
     }
 }
 
+function changeObjectClass(newClassName) {
+    if (state.appState.selectedObjectIndex === -1) return;
+
+    state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
+
+    const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+    obj.className = newClassName;
+
+    // Re-initialize keypoints based on the new class
+    const newLabels = state.config[newClassName].labels;
+    obj.keypoints = newLabels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }));
+
+    state.appState.selectedPointIndex = -1; // Reset selected point
+    updateAllUI();
+    redrawCanvas();
+}
+
 function handleMouseMove(e) {
     const pos = getMousePos(ui.canvas, e);
     const worldPos = screenToWorld(pos.x, pos.y, state.transform);

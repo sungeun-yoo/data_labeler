@@ -28,20 +28,6 @@ function validateAndSetConfig(config, filename = 'default_config') {
     updateClassSelectorUI();
 }
 
-export async function loadDefaultConfig() {
-    try {
-        const response = await fetch('./config/multi_cls_config.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const config = await response.json();
-        validateAndSetConfig(config, 'multi_cls_config.json');
-    } catch (error) {
-        showNotification(`기본 설정 파일 로드 실패: ${error.message}`, 'error', ui);
-    } finally {
-        updateHelpUI();
-    }
-}
 
 export async function handleConfigFile(e) {
     const file = e.target.files[0];

@@ -72,7 +72,13 @@ export function redrawCanvas() {
 function drawBbox(obj, isSelected, isDrawing = false) {
     const [x1, y1, x2, y2] = obj.bbox;
     ui.ctx.lineWidth = isSelected ? 4 / state.transform.scale : 2 / state.transform.scale;
-    ui.ctx.strokeStyle = isSelected ? 'rgba(59, 130, 246, 1)' : getColorForClass(obj.className);
+
+    let color = 'rgba(59, 130, 246, 1)'; // Default to blue for selected/drawing
+    if (!isSelected && obj.className) {
+        color = getColorForClass(obj.className);
+    }
+    ui.ctx.strokeStyle = color;
+
     if (isDrawing) ui.ctx.setLineDash([5, 5]);
     ui.ctx.strokeRect(Math.min(x1,x2), Math.min(y1,y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
     ui.ctx.setLineDash([]);
@@ -150,9 +156,15 @@ function drawResizeHandles(bbox) {
 }
 
 function drawCursorLabel(pos) {
-    if (state.appState.mode !== 'EDITING_POSE' || state.appState.selectedPointIndex === -1) return;
+    if (state.appState.mode !== 'EDITING_POSE' || state.appState.selectedPointIndex === -1 || state.appState.selectedObjectIndex === -1) return;
 
-    const label = state.config.labels[state.appState.selectedPointIndex];
+    const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+    if (!obj || !obj.className || !state.config[obj.className]) return;
+
+    const labels = state.config[obj.className].labels;
+    const label = labels[state.appState.selectedPointIndex];
+    if (!label) return;
+
     const ctx = ui.ctx;
     ctx.save();
 
