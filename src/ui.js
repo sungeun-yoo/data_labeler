@@ -1,6 +1,5 @@
 import * as state from './state.js';
 import { redrawCanvas } from './canvas.js';
-import { enterBboxDrawingMode, deleteSelectedObject, selectObject } from './events.js';
 import { formatBytes } from './utils.js';
 
 export const ui = {};
@@ -106,7 +105,7 @@ export function updateObjectListUI() {
         item.className = 'object-item p-3 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors flex justify-between items-center';
         if (index === state.appState.selectedObjectIndex) item.classList.add('selected');
         item.innerHTML = `<span>객체 ${index + 1}</span>`;
-        item.addEventListener('click', () => selectObject(index));
+        item.dataset.objectId = index;
         ui.objectListWrapper.appendChild(item);
     });
 }
@@ -126,7 +125,6 @@ export function updateDetailsPanelUI() {
         <div id="keypoint-list" class="space-y-1 p-1"></div>
     `;
     const deleteButton = document.getElementById('btnDeleteObject');
-    deleteButton.addEventListener('click', deleteSelectedObject);
     deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
     document.getElementById('details-title').textContent = `객체 ${state.appState.selectedObjectIndex + 1} 상세정보`;
 
@@ -153,7 +151,7 @@ export function updateBboxInfoUI() {
         const addButton = document.createElement('button');
         addButton.textContent = '+ BBox 추가';
         addButton.className = 'btn btn-tonal text-xs py-1 px-2';
-        addButton.onclick = () => enterBboxDrawingMode(state.appState.selectedObjectIndex);
+        addButton.dataset.action = 'add-bbox';
         container.appendChild(addButton);
         bboxInfoEl.appendChild(container);
         return;
@@ -218,13 +216,7 @@ export function updateKeypointListUI() {
             </div>
         `;
 
-        item.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT') {
-                state.appState.selectedPointIndex = index;
-                updateAllUI();
-                redrawCanvas();
-            }
-        });
+        item.dataset.keypointId = index;
 
         const xInput = item.querySelector('input[type="number"][value*="."]');
         const yInput = item.querySelectorAll('input[type="number"]')[1];

@@ -25,6 +25,35 @@ export function initializeEventListeners() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', handleResize);
+
+    // Event delegation for dynamic elements
+    ui.objectListWrapper.addEventListener('click', (e) => {
+        const item = e.target.closest('.object-item');
+        if (item && item.dataset.objectId) {
+            selectObject(parseInt(item.dataset.objectId));
+        }
+    });
+
+    ui.detailsWrapper.addEventListener('click', (e) => {
+        const deleteButton = e.target.closest('#btnDeleteObject');
+        if (deleteButton) {
+            deleteSelectedObject();
+            return;
+        }
+
+        const addBboxButton = e.target.closest('button[data-action="add-bbox"]');
+        if (addBboxButton) {
+            enterBboxDrawingMode(state.appState.selectedObjectIndex);
+            return;
+        }
+
+        const keypointItem = e.target.closest('.keypoint-item');
+        if (keypointItem && keypointItem.dataset.keypointId && e.target.tagName !== 'INPUT') {
+            state.appState.selectedPointIndex = parseInt(keypointItem.dataset.keypointId);
+            updateAllUI();
+            redrawCanvas();
+        }
+    });
 }
 
 function handleMouseDown(e) {
