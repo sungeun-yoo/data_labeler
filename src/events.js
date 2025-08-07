@@ -3,7 +3,7 @@ import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarU
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
-import { showDeleteConfirmModal } from './modal.js';
+import { showDeleteConfirmModal, isModalOpen } from './modal.js';
 
 function updateCursor() {
     if (state.appState.isPanning) {
@@ -263,6 +263,10 @@ function handleMouseUp(e) {
 
 async function handleKeyDown(e) {
     if (e.repeat) return;
+    if (isModalOpen()) {
+        if (e.key === 'Escape') hideDeleteConfirmModal();
+        return;
+    }
     if (e.key === 'Alt') {
         state.appState.isAltDown = true;
         updateCursor();

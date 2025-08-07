@@ -16,7 +16,7 @@ export function initUI() {
         imageProgress: document.getElementById('imageProgress'),
         canvas: document.getElementById('mainCanvas'),
         ctx: document.getElementById('mainCanvas').getContext('2d'),
-        canvasWrapper: document.getElementById('canvas-wrapper'),
+        canvasWrapper: document.getElementById('split-0'),
         canvasLoader: document.getElementById('canvas-loader'),
         btnAddObject: document.getElementById('btnAddObject'),
         configHelp: document.getElementById('config-help'),
@@ -244,13 +244,22 @@ export function updateKeypointListUI(obj) {
         return;
     }
 
+    const header = document.createElement('div');
+    header.className = 'keypoint-header p-2 text-xs font-bold';
+    header.innerHTML = `
+        <span class="col-label">라벨</span>
+        <span class="col-coords">좌표</span>
+        <span class="col-vis">Visibility</span>
+    `;
+    keypointListEl.appendChild(header);
+
     const points = obj.keypoints;
     const labels = state.config[obj.className].labels;
 
     labels.forEach((label, index) => {
         const point = points[index];
         const item = document.createElement('div');
-        item.className = 'keypoint-item p-2 text-xs rounded-lg cursor-pointer transition-colors space-y-2';
+        item.className = 'keypoint-item p-2 text-xs rounded-lg cursor-pointer transition-colors flex items-center';
         if (index === state.appState.selectedPointIndex) item.classList.add('selected');
 
         const visibilityRadios = [0, 1, 2].map(v => `
@@ -261,20 +270,14 @@ export function updateKeypointListUI(obj) {
         `).join('');
 
         item.innerHTML = `
-            <div class="flex justify-between items-center">
-                <span class="font-semibold">${index + 1}. ${label}</span>
+            <span class="col-label font-semibold truncate">${index + 1}. ${label}</span>
+            <div class="col-coords flex items-center gap-1">
+                <span class="text-gray-400">X:</span>
+                <input type="number" value="${point.x.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
+                <span class="text-gray-400">Y:</span>
+                <input type="number" value="${point.y.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
             </div>
-            <div class="grid grid-cols-2 gap-x-2 gap-y-1">
-                <div class="flex items-center">
-                    <span class="mr-1 text-gray-400">X:</span>
-                    <input type="number" value="${point.x.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
-                </div>
-                <div class="flex items-center">
-                    <span class="mr-1 text-gray-400">Y:</span>
-                    <input type="number" value="${point.y.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
-                </div>
-            </div>
-            <div class="flex justify-around items-center pt-1">
+            <div class="col-vis flex justify-around items-center">
                 ${visibilityRadios}
             </div>
         `;
