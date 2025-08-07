@@ -5,6 +5,25 @@ import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotif
 import { navigateImage, saveCurrentAnnotation, handleConfigFile, handleDirectorySelection } from './file.js';
 import { showDeleteConfirmModal } from './modal.js';
 
+function updateCursor() {
+    if (state.appState.isPanning) {
+        ui.canvas.style.cursor = 'grabbing';
+        return;
+    }
+
+    if (state.appState.isAltDown) {
+        ui.canvas.style.cursor = 'grab';
+        return;
+    }
+
+    if (state.appState.mode === 'EDITING_POSE' || state.appState.mode === 'DRAWING_BBOX') {
+        ui.canvas.style.cursor = 'crosshair';
+        return;
+    }
+
+    ui.canvas.style.cursor = 'pointer';
+}
+
 export function initializeEventListeners() {
     ui.btnLoadConfig.addEventListener('click', () => ui.configLoader.click());
     ui.configLoader.addEventListener('change', handleConfigFile);
@@ -72,7 +91,7 @@ function handleMouseDown(e) {
     if (e.altKey) {
         state.appState.isPanning = true;
         state.appState.lastPanPoint = { x: e.clientX, y: e.clientY };
-        ui.canvas.style.cursor = 'grabbing';
+        updateCursor();
         redrawCanvas();
         return;
     }
@@ -170,6 +189,8 @@ function handleMouseMove(e) {
     const worldPos = screenToWorld(pos.x, pos.y, state.transform);
     state.appState.lastMouseWorldPos = worldPos;
 
+    updateCursor();
+
     if (state.appState.isPanning) {
         const dx = e.clientX - state.appState.lastPanPoint.x;
         const dy = e.clientY - state.appState.lastPanPoint.y;
@@ -236,7 +257,7 @@ function handleMouseUp(e) {
     state.appState.isDraggingBbox = false;
     state.appState.isResizingBbox = false;
     state.appState.resizeHandle = null;
-    if (!state.appState.isAltDown) ui.canvas.style.cursor = 'crosshair';
+    updateCursor();
     redrawCanvas();
 }
 
@@ -244,7 +265,7 @@ async function handleKeyDown(e) {
     if (e.repeat) return;
     if (e.key === 'Alt') {
         state.appState.isAltDown = true;
-        if (!state.appState.isPanning) ui.canvas.style.cursor = 'grab';
+        updateCursor();
     }
     if (e.altKey || e.target.tagName === 'INPUT') return;
     switch (e.key.toLowerCase()) {
@@ -270,7 +291,7 @@ async function handleKeyDown(e) {
 function handleKeyUp(e) {
     if (e.key === 'Alt') {
         state.appState.isAltDown = false;
-        if (!state.appState.isPanning) ui.canvas.style.cursor = 'crosshair';
+        updateCursor();
     }
 }
 
@@ -295,6 +316,7 @@ export function enterBboxDrawingMode(forObjectIndex = -1) {
     if (forObjectIndex === -1) state.appState.selectedObjectIndex = -1;
     else state.appState.selectedObjectIndex = forObjectIndex;
     updateAllUI();
+    updateCursor();
 }
 
 export function selectObject(objIndex) {
@@ -304,6 +326,7 @@ export function selectObject(objIndex) {
         state.appState.mode = 'EDITING_POSE';
         updateAllUI();
         redrawCanvas();
+        updateCursor();
     }
 }
 
@@ -322,6 +345,7 @@ export function performDeleteObject() {
     updateAllUI();
     redrawCanvas();
     showNotification('객체 삭제됨', 'success', ui);
+    updateCursor();
 }
 
 function undo() {
@@ -334,6 +358,7 @@ function undo() {
         updateAllUI();
         redrawCanvas();
         showNotification('실행 취소', 'success', ui);
+        updateCursor();
     } else {
         showNotification('더 이상 취소할 내용이 없습니다.', 'info', ui);
     }
