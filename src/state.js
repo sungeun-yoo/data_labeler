@@ -23,6 +23,7 @@ export const appState = {
     draggingPointInfo: { objIndex: -1, ptIndex: -1 },
     lastMouseWorldPos: null,
     isAltDown: false,
+    currentClass: null,
 };
 
 export let transform = { scale: 1, offsetX: 0, offsetY: 0 };

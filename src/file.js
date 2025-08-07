@@ -1,7 +1,47 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateHelpUI } from './ui.js';
+import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI } from './ui.js';
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage } from './canvas.js';
+
+function validateAndSetConfig(config, filename = 'default_config') {
+    if (typeof config !== 'object' || config === null) {
+        throw new Error("Config는 객체여야 합니다.");
+    }
+
+    const classes = Object.keys(config);
+    if (classes.length === 0) {
+        throw new Error("Config에 정의된 클래스가 없습니다.");
+    }
+
+    for (const className of classes) {
+        const classConfig = config[className];
+        if (!Array.isArray(classConfig.labels)) throw new Error(`'${className}' 클래스에 'labels' 배열이 없습니다.`);
+        if (!Array.isArray(classConfig.skeleton)) throw new Error(`'${className}' 클래스에 'skeleton' 배열이 없습니다.`);
+    }
+
+    state.setConfig(config);
+    state.appState.currentClass = classes[0];
+    showNotification(`${filename} 로드 완료`, 'success', ui);
+    ui.btnLoadDir.disabled = false;
+    ui.btnLoadConfig.classList.replace('btn-tonal', 'btn-success');
+    ui.btnLoadConfig.textContent = 'Config 로드됨';
+    updateClassSelectorUI();
+}
+
+export async function loadDefaultConfig() {
+    try {
+        const response = await fetch('./config/multi_cls_config.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const config = await response.json();
+        validateAndSetConfig(config, 'multi_cls_config.json');
+    } catch (error) {
+        showNotification(`기본 설정 파일 로드 실패: ${error.message}`, 'error', ui);
+    } finally {
+        updateHelpUI();
+    }
+}
 
 export async function handleConfigFile(e) {
     const file = e.target.files[0];
@@ -9,16 +49,7 @@ export async function handleConfigFile(e) {
     try {
         const fileContent = await file.text();
         const parsedConfig = JSON.parse(fileContent);
-
-        if (!Array.isArray(parsedConfig.labels)) throw new Error("Config 파일에 'labels' 배열이 없습니다.");
-        if (!Array.isArray(parsedConfig.skeleton)) throw new Error("Config 파일에 'skeleton' 배열이 없습니다.");
-
-        state.setConfig(parsedConfig);
-        showNotification(`${file.name} 로드 완료`, 'success', ui);
-        ui.btnLoadDir.disabled = false;
-        ui.btnLoadConfig.classList.replace('btn-tonal', 'btn-success');
-        ui.btnLoadConfig.textContent = 'Config 로드됨';
-
+        validateAndSetConfig(parsedConfig, file.name);
     } catch (error) {
         state.setConfig(null);
         ui.btnLoadDir.disabled = true;

@@ -12,6 +12,25 @@ export function handleResize() {
     }
 }
 
+const CLASS_COLORS = [
+    'rgba(16, 185, 129, 0.8)', // Emerald
+    'rgba(245, 158, 11, 0.8)',  // Amber
+    'rgba(239, 68, 68, 0.8)',   // Red
+    'rgba(139, 92, 246, 0.8)',  // Violet
+    'rgba(59, 130, 246, 1)',    // Blue (selected)
+];
+
+let classColorMap = {};
+let colorIndex = 0;
+
+function getColorForClass(className) {
+    if (!classColorMap[className]) {
+        classColorMap[className] = CLASS_COLORS[colorIndex % CLASS_COLORS.length];
+        colorIndex++;
+    }
+    return classColorMap[className];
+}
+
 export function redrawCanvas() {
     if (!state.currentImage || !ui.ctx) return;
     const ctx = ui.ctx;
@@ -34,34 +53,34 @@ export function redrawCanvas() {
     objects.forEach((obj, index) => {
         const isSelected = index === state.appState.selectedObjectIndex;
         if (obj.bbox) {
-            drawBbox(obj.bbox, isSelected);
+            drawBbox(obj, isSelected);
             if (isSelected) drawResizeHandles(obj.bbox);
         }
         if (obj.keypoints) {
-            drawSkeleton(obj.keypoints, isSelected);
-            drawKeypoints(obj.keypoints, index, isSelected);
+            drawSkeleton(obj, isSelected);
+            drawKeypoints(obj, index, isSelected);
         }
     });
 
     if (state.appState.mode === 'DRAWING_BBOX' && state.appState.currentBbox) {
-        drawBbox(state.appState.currentBbox, true, true);
+        drawBbox({ bbox: state.appState.currentBbox }, true, true);
     }
 
     ctx.restore();
 }
 
-function drawBbox(bbox, isSelected, isDrawing = false) {
-    const [x1, y1, x2, y2] = bbox;
+function drawBbox(obj, isSelected, isDrawing = false) {
+    const [x1, y1, x2, y2] = obj.bbox;
     ui.ctx.lineWidth = isSelected ? 4 / state.transform.scale : 2 / state.transform.scale;
-    ui.ctx.strokeStyle = isSelected ? 'rgba(59, 130, 246, 1)' : 'rgba(16, 185, 129, 0.8)';
+    ui.ctx.strokeStyle = isSelected ? 'rgba(59, 130, 246, 1)' : getColorForClass(obj.className);
     if (isDrawing) ui.ctx.setLineDash([5, 5]);
     ui.ctx.strokeRect(Math.min(x1,x2), Math.min(y1,y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
     ui.ctx.setLineDash([]);
 }
 
-function drawKeypoints(points, objIndex, isSelected) {
+function drawKeypoints(obj, objIndex, isSelected) {
     const pointRadius = 5 / state.transform.scale;
-    points.forEach((point, ptIndex) => {
+    obj.keypoints.forEach((point, ptIndex) => {
         if (point.visible === 0) return;
         ui.ctx.beginPath();
         ui.ctx.arc(point.x, point.y, pointRadius, 0, 2 * Math.PI);
@@ -75,10 +94,15 @@ function drawKeypoints(points, objIndex, isSelected) {
     });
 }
 
-function drawSkeleton(points, isSelected) {
+function drawSkeleton(obj, isSelected) {
+    if (!obj.className || !state.config[obj.className]) return;
+
+    const skeleton = state.config[obj.className].skeleton;
+    const points = obj.keypoints;
+
     ui.ctx.lineWidth = 3 / state.transform.scale;
     ui.ctx.strokeStyle = isSelected ? 'rgba(96, 165, 250, 0.9)' : 'rgba(96, 165, 250, 0.5)';
-    state.config.skeleton.forEach(([p1Index, p2Index]) => {
+    skeleton.forEach(([p1Index, p2Index]) => {
         const p1 = points[p1Index], p2 = points[p2Index];
         if (p1?.visible > 0 && p2?.visible > 0) {
             ui.ctx.beginPath();
