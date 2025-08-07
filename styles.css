@@ -83,10 +83,10 @@ body {
     position: absolute;
     z-index: 1;
     bottom: 125%;
-    left: 50%;
-    margin-left: -110px;
+    left: -100px;
     opacity: 0;
     transition: opacity 0.3s;
+    white-space: normal;
 }
 
 .tooltip::after {
@@ -103,6 +103,10 @@ body {
 .tooltip-container:hover .tooltip {
     visibility: visible;
     opacity: 1;
+}
+
+.details-scroll-container {
+    overflow: visible;
 }
 
 .gutter {
