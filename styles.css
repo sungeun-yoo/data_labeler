@@ -83,7 +83,7 @@ body {
     position: absolute;
     z-index: 1;
     bottom: 125%;
-    left: -100px;
+    left: -120px;
     opacity: 0;
     transition: opacity 0.3s;
     white-space: normal;
@@ -106,7 +106,20 @@ body {
 }
 
 .details-scroll-container {
-    overflow: visible;
+    overflow-y: auto;
+}
+
+.details-scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.details-scroll-container::-webkit-scrollbar-track {
+    background: var(--md-sys-color-surface-container);
+}
+
+.details-scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--md-sys-color-outline);
+    border-radius: 4px;
 }
 
 .gutter {
