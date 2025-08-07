@@ -48,6 +48,18 @@ body {
 .object-item.selected { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 .keypoint-item.selected { background-color: var(--md-sys-color-surface-container-high); }
 
+.keypoint-header {
+    display: flex;
+    align-items: center;
+    color: var(--md-sys-color-on-surface-variant);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    margin-bottom: 4px;
+}
+
+.col-label { flex: 0 0 120px; padding-right: 8px; }
+.col-coords { flex: 1 1 auto; }
+.col-vis { flex: 0 0 150px; text-align: center; }
+
 input[type=number] {
     background-color: var(--md-sys-color-surface-container-low);
     border: 1px solid var(--md-sys-color-outline-variant); border-radius: 4px;
