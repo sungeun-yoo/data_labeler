@@ -15,6 +15,10 @@ export function initializeEventListeners() {
     ui.btnNext.addEventListener('click', () => navigateImage(1));
     ui.btnAddObject.addEventListener('click', () => enterBboxDrawingMode());
 
+    ui.classSelector.addEventListener('change', (e) => {
+        state.appState.currentClass = e.target.value;
+    });
+
     ui.canvas.addEventListener('mousedown', handleMouseDown);
     ui.canvas.addEventListener('mousemove', handleMouseMove);
     ui.canvas.addEventListener('mouseup', handleMouseUp);
@@ -52,6 +56,12 @@ export function initializeEventListeners() {
             state.appState.selectedPointIndex = parseInt(keypointItem.dataset.keypointId);
             updateAllUI();
             redrawCanvas();
+        }
+    });
+
+    ui.detailsWrapper.addEventListener('change', (e) => {
+        if (e.target.id === 'details-class-selector') {
+            changeObjectClass(e.target.value);
         }
     });
 }
@@ -110,7 +120,8 @@ function handleMouseDown(e) {
             pointToUpdate.x = worldPos.x;
             pointToUpdate.y = worldPos.y;
             pointToUpdate.visible = 2;
-            const nextPointIndex = (state.appState.selectedPointIndex + 1) % state.config.labels.length;
+            const labels = state.config[selectedObject.className].labels;
+            const nextPointIndex = (state.appState.selectedPointIndex + 1) % labels.length;
             state.appState.selectedPointIndex = nextPointIndex;
             updateAllUI();
             redrawCanvas();
@@ -137,6 +148,23 @@ function handleMouseDown(e) {
     }
 }
 
+function changeObjectClass(newClassName) {
+    if (state.appState.selectedObjectIndex === -1) return;
+
+    state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
+
+    const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+    obj.className = newClassName;
+
+    // Re-initialize keypoints based on the new class
+    const newLabels = state.config[newClassName].labels;
+    obj.keypoints = newLabels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }));
+
+    state.appState.selectedPointIndex = -1; // Reset selected point
+    updateAllUI();
+    redrawCanvas();
+}
+
 function handleMouseMove(e) {
     const pos = getMousePos(ui.canvas, e);
     const worldPos = screenToWorld(pos.x, pos.y, state.transform);
@@ -149,23 +177,25 @@ function handleMouseMove(e) {
         state.transform.offsetY += dy;
         state.appState.lastPanPoint = { x: e.clientX, y: e.clientY };
     } else if (state.appState.isResizingBbox) {
-        const bbox = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex].bbox;
+        const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+        const bbox = obj.bbox;
         switch (state.appState.resizeHandle) {
             case 'tl': bbox[0] = worldPos.x; bbox[1] = worldPos.y; break;
             case 'tr': bbox[2] = worldPos.x; bbox[1] = worldPos.y; break;
             case 'bl': bbox[0] = worldPos.x; bbox[3] = worldPos.y; break;
             case 'br': bbox[2] = worldPos.x; bbox[3] = worldPos.y; break;
         }
-        updateBboxInfoUI();
+        updateBboxInfoUI(obj);
     } else if (state.appState.mode === 'DRAWING_BBOX' && state.appState.drawingBboxStartPoint) {
         state.appState.currentBbox[2] = worldPos.x;
         state.appState.currentBbox[3] = worldPos.y;
     } else if (state.appState.isDraggingPoint) {
         const { objIndex, ptIndex } = state.appState.draggingPointInfo;
-        const point = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[objIndex].keypoints[ptIndex];
+        const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[objIndex];
+        const point = obj.keypoints[ptIndex];
         point.x = worldPos.x;
         point.y = worldPos.y;
-        updateKeypointListUI();
+        updateKeypointListUI(obj);
     }
 
     redrawCanvas();
@@ -179,10 +209,12 @@ function handleMouseUp(e) {
             obj.bbox = [...state.appState.currentBbox];
             newObjectIndex = state.appState.selectedObjectIndex;
         } else {
+            const newClass = state.appState.currentClass;
             const newObject = {
                 id: `obj_${Date.now()}`,
+                className: newClass,
                 bbox: [...state.appState.currentBbox],
-                keypoints: state.config.labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
+                keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
             };
             state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
             newObjectIndex = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.length - 1;

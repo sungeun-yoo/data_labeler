@@ -42,7 +42,11 @@
 
         <!-- 오른쪽 패널 -->
         <aside class="w-1/4 lg:w-1/5 rounded-2xl shadow-lg flex flex-col" style="background-color: var(--md-sys-color-surface-container);">
-            <div class="p-4 border-b" style="border-color: var(--md-sys-color-outline-variant);">
+            <div class="p-4 border-b space-y-4" style="border-color: var(--md-sys-color-outline-variant);">
+                <div id="class-selector-wrapper" class="hidden">
+                    <label for="class-selector" class="block text-sm font-medium mb-1">새 객체 클래스</label>
+                    <select id="class-selector" class="w-full rounded-md p-2" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
+                </div>
                 <button id="btnAddObject" class="btn btn-filled w-full" disabled>+ 객체 추가 (A)</button>
             </div>
             <div class="flex-grow overflow-y-auto">

@@ -24,6 +24,8 @@ export function initUI() {
         detailsWrapper: document.getElementById('details-wrapper'),
         modeIndicator: document.getElementById('mode-indicator'),
         toastPopup: document.getElementById('toast-popup'),
+        classSelectorWrapper: document.getElementById('class-selector-wrapper'),
+        classSelector: document.getElementById('class-selector'),
     });
 
     ui.btnPrev.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
@@ -41,6 +43,23 @@ export function updateAllUI() {
     updateDetailsPanelUI();
     updateInfoBarUI();
     updateModeIndicatorUI();
+}
+
+export function updateClassSelectorUI() {
+    if (!state.config) {
+        ui.classSelectorWrapper.classList.add('hidden');
+        return;
+    }
+    ui.classSelectorWrapper.classList.remove('hidden');
+    ui.classSelector.innerHTML = '';
+    const classes = Object.keys(state.config);
+    classes.forEach(className => {
+        const option = document.createElement('option');
+        option.value = className;
+        option.textContent = className;
+        ui.classSelector.appendChild(option);
+    });
+    ui.classSelector.value = state.appState.currentClass;
 }
 
 export function updateModeIndicatorUI() {
@@ -71,23 +90,29 @@ export function updateHelpUI() {
 
     if (!state.config) {
         ui.btnAddObject.disabled = true;
+        ui.classSelectorWrapper.classList.add('hidden');
         ui.configHelp.innerHTML = `
             <h3 class="font-bold text-white mb-2">1. Config 파일을 로드하세요.</h3>
             <p>라벨의 이름과 뼈대(skeleton) 구조를 정의하는 JSON 파일입니다.</p>
             <p class="mt-2">예시 포맷:</p>
             <pre class="bg-gray-900 p-2 rounded-md mt-1 text-xs whitespace-pre-wrap"><code>{
-"labels": ["코", "눈", ...],
-"skeleton": [ [0, 1], [0, 2], ... ]
+  "person": {
+    "labels": ["코", "눈", ...],
+    "skeleton": [ [0, 1], [0, 2], ... ]
+  },
+  "vehicle": { ... }
 }</code></pre>
         `;
     } else if (state.imageFiles.length === 0) {
         ui.btnAddObject.disabled = true;
+        ui.classSelectorWrapper.classList.remove('hidden');
         ui.configHelp.innerHTML = `
             <h3 class="font-bold text-white mb-2">2. 이미지 폴더를 열어주세요.</h3>
             <p>라벨링할 이미지가 포함된 폴더를 선택합니다.</p>
         `;
     } else {
         ui.btnAddObject.disabled = false;
+        ui.classSelectorWrapper.classList.remove('hidden');
     }
 }
 
@@ -104,7 +129,12 @@ export function updateObjectListUI() {
         const item = document.createElement('div');
         item.className = 'object-item p-3 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors flex justify-between items-center';
         if (index === state.appState.selectedObjectIndex) item.classList.add('selected');
-        item.innerHTML = `<span>객체 ${index + 1}</span>`;
+        item.innerHTML = `
+            <div>
+                <span class="font-semibold">객체 ${index + 1}</span>
+                <span class="text-xs ml-2 px-2 py-1 rounded-full" style="background-color: var(--md-sys-color-surface-container-high);">${obj.className || 'N/A'}</span>
+            </div>
+        `;
         item.dataset.objectId = index;
         ui.objectListWrapper.appendChild(item);
     });
@@ -116,27 +146,53 @@ export function updateDetailsPanelUI() {
         return;
     }
     ui.detailsWrapper.classList.remove('hidden');
+    const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+
     ui.detailsWrapper.innerHTML = `
         <div id="details-header" class="flex justify-between items-center p-2">
             <h3 class="text-md font-semibold" id="details-title"></h3>
             <button id="btnDeleteObject" class="btn btn-icon btn-danger" title="선택된 객체 삭제 (Delete)"></button>
         </div>
+        <div id="class-info" class="p-2 text-sm space-y-1"></div>
         <div id="bbox-info" class="p-2 text-sm space-y-2"></div>
         <div id="keypoint-list" class="space-y-1 p-1"></div>
     `;
+
+    document.getElementById('details-title').textContent = `객체 ${state.appState.selectedObjectIndex + 1} 상세정보`;
     const deleteButton = document.getElementById('btnDeleteObject');
     deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
-    document.getElementById('details-title').textContent = `객체 ${state.appState.selectedObjectIndex + 1} 상세정보`;
 
-    updateBboxInfoUI();
-    updateKeypointListUI();
+    updateClassInfoUI(obj);
+    updateBboxInfoUI(obj);
+    updateKeypointListUI(obj);
 }
 
-export function updateBboxInfoUI() {
+function updateClassInfoUI(obj) {
+    const classInfoEl = document.getElementById('class-info');
+    if (!classInfoEl) return;
+
+    classInfoEl.innerHTML = `
+        <label for="details-class-selector" class="font-semibold text-gray-300">클래스</label>
+        <select id="details-class-selector" class="w-full rounded-md p-2 mt-1" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
+    `;
+
+    const selector = document.getElementById('details-class-selector');
+    const classes = Object.keys(state.config);
+    classes.forEach(className => {
+        const option = document.createElement('option');
+        option.value = className;
+        option.textContent = className;
+        if (className === obj.className) {
+            option.selected = true;
+        }
+        selector.appendChild(option);
+    });
+}
+
+
+export function updateBboxInfoUI(obj) {
     const bboxInfoEl = document.getElementById('bbox-info');
     if (!bboxInfoEl) return;
-
-    const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
     bboxInfoEl.innerHTML = '';
 
     const titleDiv = document.createElement('div');
@@ -178,13 +234,20 @@ export function updateBboxInfoUI() {
     });
 }
 
-export function updateKeypointListUI() {
+export function updateKeypointListUI(obj) {
     const keypointListEl = document.getElementById('keypoint-list');
     if (!keypointListEl) return;
     keypointListEl.innerHTML = '';
-    const points = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex].keypoints;
 
-    state.config.labels.forEach((label, index) => {
+    if (!obj || !obj.className || !state.config[obj.className]) {
+        keypointListEl.innerHTML = '<p class="text-xs text-gray-500 p-2">객체의 클래스가 유효하지 않아 키포인트를 표시할 수 없습니다.</p>';
+        return;
+    }
+
+    const points = obj.keypoints;
+    const labels = state.config[obj.className].labels;
+
+    labels.forEach((label, index) => {
         const point = points[index];
         const item = document.createElement('div');
         item.className = 'keypoint-item p-2 text-xs rounded-lg cursor-pointer transition-colors space-y-2';
