@@ -29,3 +29,7 @@ function hideDeleteConfirmModal() {
     const modal = document.getElementById('deleteConfirmModal');
     if (modal) modal.remove();
 }
+
+export function isModalOpen() {
+    return !!document.getElementById('deleteConfirmModal');
+}
