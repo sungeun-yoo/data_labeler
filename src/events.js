@@ -2,7 +2,7 @@ import * as state from './state.js';
 import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification } from './utils.js';
-import { navigateImage, saveCurrentAnnotation, handleConfigFile, handleDirectorySelection } from './file.js';
+import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
 import { showDeleteConfirmModal } from './modal.js';
 
 export function initializeEventListeners() {
@@ -10,7 +10,7 @@ export function initializeEventListeners() {
     ui.configLoader.addEventListener('change', handleConfigFile);
     ui.btnLoadDir.addEventListener('click', () => ui.dirLoader.click());
     ui.dirLoader.addEventListener('change', handleDirectorySelection);
-    ui.btnSave.addEventListener('click', saveCurrentAnnotation);
+    ui.btnSave.addEventListener('click', saveAllAnnotationsToZip);
     ui.btnPrev.addEventListener('click', () => navigateImage(-1));
     ui.btnNext.addEventListener('click', () => navigateImage(1));
     ui.btnAddObject.addEventListener('click', () => enterBboxDrawingMode());
@@ -249,7 +249,7 @@ async function handleKeyDown(e) {
     if (e.altKey || e.target.tagName === 'INPUT') return;
     switch (e.key.toLowerCase()) {
         case 'a': e.preventDefault(); enterBboxDrawingMode(); break;
-        case 's': e.preventDefault(); saveCurrentAnnotation(); break;
+        case 's': e.preventDefault(); saveAllAnnotationsToZip(); break;
         case 'z': if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); } break;
         case 'escape':
             e.preventDefault();
