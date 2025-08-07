@@ -15,11 +15,14 @@ export function showDeleteConfirmModal() {
         </div>
     `;
     document.body.appendChild(modal);
-    document.getElementById('btnModalConfirm').addEventListener('click', () => {
+    const confirmButton = document.getElementById('btnModalConfirm');
+    confirmButton.addEventListener('click', () => {
         performDeleteObject();
         hideDeleteConfirmModal();
     });
     document.getElementById('btnModalCancel').addEventListener('click', hideDeleteConfirmModal);
+
+    confirmButton.focus();
 }
 
 function hideDeleteConfirmModal() {
