@@ -350,13 +350,10 @@ function changeClassWithNumber(classIndex) {
 
     const newClassName = classes[classIndex - 1];
 
-    if (state.appState.selectedObjectIndex !== -1) {
-        changeObjectClass(newClassName);
-    } else {
-        state.appState.currentClass = newClassName;
-        updateAllUI(); // To update the main class selector
-        showNotification(`기본 클래스 변경됨: ${newClassName}`, 'info', ui);
-    }
+    // Per user request, number shortcuts should only change the default class.
+    state.appState.currentClass = newClassName;
+    updateAllUI(); // This will update the main class selector dropdown.
+    showNotification(`기본 클래스 변경됨: ${newClassName}`, 'info', ui);
 }
 
 
