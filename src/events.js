@@ -51,6 +51,15 @@ export function initializeEventListeners() {
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', handleResize);
 
+    window.addEventListener('beforeunload', (e) => {
+        if (state.hasChanges()) {
+            // Prevent default behavior to show the confirmation dialog
+            e.preventDefault();
+            // Required for Chrome
+            e.returnValue = '';
+        }
+    });
+
     // Event delegation for dynamic elements
     ui.objectListWrapper.addEventListener('click', (e) => {
         const item = e.target.closest('.object-item');
