@@ -429,10 +429,9 @@ function changeClassWithNumber(classIndex) {
 
     const newClassName = classes[classIndex - 1];
 
-    // Per user request, number shortcuts should only change the default class.
     state.appState.currentClass = newClassName;
-    updateAllUI(); // This will update the main class selector dropdown.
-    showNotification(`기본 클래스 변경됨: ${newClassName}`, 'info', ui);
+    showNotification(`${newClassName} 클래스로 객체 그리기를 시작합니다.`, 'info', ui);
+    enterBboxDrawingMode();
 }
 
 
