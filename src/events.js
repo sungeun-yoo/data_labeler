@@ -184,9 +184,11 @@ function handleMouseDown(e) {
         if (state.appState.selectedPointIndex !== -1 && isPointInBbox(worldPos, selectedObject.bbox)) {
             state.pushHistory(JSON.parse(JSON.stringify(objects)));
             const pointToUpdate = selectedObject.keypoints[state.appState.selectedPointIndex];
-            pointToUpdate.x = worldPos.x;
-            pointToUpdate.y = worldPos.y;
-            pointToUpdate.visible = 2;
+            if (pointToUpdate) {
+                pointToUpdate.x = worldPos.x;
+                pointToUpdate.y = worldPos.y;
+                pointToUpdate.visible = 2;
+            }
             const labels = state.config[selectedObject.className].labels;
             const nextPointIndex = (state.appState.selectedPointIndex + 1) % labels.length;
             state.appState.selectedPointIndex = nextPointIndex;
@@ -310,7 +312,16 @@ function handleMouseUp(e) {
             }
 
             selectObject(newObjectIndex);
-            state.appState.selectedPointIndex = 0; // Start with the first keypoint
+
+            const newObject = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[newObjectIndex];
+            if (newObject.keypoints && newObject.keypoints.length > 0) {
+                state.appState.selectedPointIndex = 0; // Start with the first keypoint
+                state.appState.mode = 'EDITING_POSE';
+            } else {
+                state.appState.selectedPointIndex = -1;
+                state.appState.mode = 'IDLE';
+            }
+
             state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
             updateAllUI();
         }
