@@ -34,6 +34,41 @@
         </div>
     </header>
 
+    <!-- JSON Viewer Sidebar -->
+    <div id="json-sidebar-container">
+        <button id="json-sidebar-toggle" class="btn btn-icon" title="JSON Viewer">
+            <!-- Icon will be inserted by JS -->
+        </button>
+        <aside id="json-sidebar" class="shadow-lg">
+            <div class="p-4" style="background-color: var(--md-sys-color-surface-container-high);">
+                <h2 class="text-lg font-bold">JSON Viewer</h2>
+            </div>
+            <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
+                <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">실시간 JSON</button>
+                <button id="btn-coco-json" class="btn btn-tonal flex-grow text-sm">COCO 포맷</button>
+            </div>
+            <div id="json-content-wrapper" class="flex-grow p-2 overflow-y-auto">
+                <!-- Live JSON Content -->
+                <div id="live-json-content">
+                    <div class="flex justify-end gap-2 mb-2">
+                        <button id="btn-copy-live" class="btn btn-tonal text-xs">복사</button>
+                        <button id="btn-download-live" class="btn btn-tonal text-xs">다운로드</button>
+                    </div>
+                    <pre><code id="live-json-output" class="text-xs">{}</code></pre>
+                </div>
+                <!-- COCO JSON Content -->
+                <div id="coco-json-content" class="hidden">
+                    <div class="flex justify-end gap-2 mb-2">
+                        <button id="btn-copy-coco" class="btn btn-tonal text-xs">복사</button>
+                        <button id="btn-download-coco" class="btn btn-tonal text-xs">다운로드</button>
+                    </div>
+                    <pre><code id="coco-json-output" class="text-xs">{}</code></pre>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+
     <!-- 메인 컨텐츠 영역 -->
     <div id="split-container" class="flex-grow flex p-4 gap-4 overflow-hidden">
         <!-- 중앙 캔버스 -->
