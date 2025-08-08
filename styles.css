@@ -142,6 +142,25 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; }
 
+.shortcut-input {
+    background-color: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shortcut-input:hover {
+    border-color: var(--md-sys-color-primary);
+}
+
+.shortcut-input:focus {
+    outline: 2px solid var(--md-sys-color-primary);
+    border-color: transparent;
+}
+
 #toast-popup {
     position: fixed;
     bottom: 2rem;
