@@ -141,6 +141,14 @@ function loadAndDrawImage(index) {
         img.onload = async () => {
             try {
                 state.setCurrentImage(img);
+
+                // Save image dimensions to the annotation data
+                const imageFilename = state.imageFiles[index].name;
+                if (state.annotationData[imageFilename]) {
+                    state.annotationData[imageFilename].image_width = img.naturalWidth;
+                    state.annotationData[imageFilename].image_height = img.naturalHeight;
+                }
+
                 await loadAnnotationForImage(index);
                 handleResize();
                 updateAllUI();

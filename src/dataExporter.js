@@ -110,14 +110,16 @@ export function exportAsYoloPose() {
     if (!data || !data.objects || data.objects.length === 0) return '';
 
     const { image_width: w, image_height: h } = data;
-    if (!w || !h) return ''; // Cannot normalize without image dimensions
+    if (!w || !h) {
+        return '오류: 이미지 크기 정보가 없어 YOLO 포맷을 생성할 수 없습니다.\n이미지를 다시 로드해 주세요.';
+    }
 
     const classNames = Object.keys(state.config || {});
 
     const lines = data.objects.map(obj => {
         const classIndex = classNames.indexOf(obj.className);
-        // Skip if the object has no class or no bounding box
-        if (classIndex === -1 || !obj.bbox) {
+        // Skip if the object has no class, no bounding box, or no keypoints
+        if (classIndex === -1 || !obj.bbox || !obj.keypoints) {
             return null;
         }
 
