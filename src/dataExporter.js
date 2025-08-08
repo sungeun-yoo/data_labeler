@@ -96,3 +96,61 @@ export function exportAsCocoFormat() {
 
     return JSON.stringify(cocoData, null, 2);
 }
+
+/**
+ * Converts the annotation data for the current image to YOLO pose format.
+ * Format per line: class_idx x_center y_center width height x1 y1 v1 x2 y2 v2 ...
+ * All coordinates are normalized.
+ */
+export function exportAsYoloPose() {
+    const currentFile = state.imageFiles[state.currentImageIndex];
+    if (!currentFile) return '';
+
+    const data = state.annotationData[currentFile.name];
+    if (!data || !data.objects || data.objects.length === 0) return '';
+
+    const { image_width: w, image_height: h } = data;
+    if (!w || !h) {
+        return '오류: 이미지 크기 정보가 없어 YOLO 포맷을 생성할 수 없습니다.\n이미지를 다시 로드해 주세요.';
+    }
+
+    const classNames = Object.keys(state.config || {});
+    const maxKeypoints = Math.max(0, ...Object.values(state.config || {}).map(c => c.labels.length));
+
+    const lines = data.objects.map(obj => {
+        const classIndex = classNames.indexOf(obj.className);
+        if (classIndex === -1 || !obj.bbox) {
+            return null;
+        }
+
+        const [x1, y1, x2, y2] = obj.bbox;
+        const boxWidth = x2 - x1;
+        const boxHeight = y2 - y1;
+        const xCenter = x1 + boxWidth / 2;
+        const yCenter = y1 + boxHeight / 2;
+
+        const bboxStr = [
+            (xCenter / w).toFixed(6),
+            (yCenter / h).toFixed(6),
+            (boxWidth / w).toFixed(6),
+            (boxHeight / h).toFixed(6)
+        ].join(' ');
+
+        const keypoints = obj.keypoints || [];
+        let keypointsStr = keypoints.map(p => {
+            const normX = p.x / w;
+            const normY = p.y / h;
+            return `${normX.toFixed(6)} ${normY.toFixed(6)} ${p.visible}`;
+        }).join(' ');
+
+        const numToPad = maxKeypoints - keypoints.length;
+        if (numToPad > 0) {
+            const padding = Array(numToPad).fill('0 0 0').join(' ');
+            keypointsStr = keypointsStr ? `${keypointsStr} ${padding}` : padding;
+        }
+
+        return `${classIndex} ${bboxStr}${keypointsStr ? ' ' + keypointsStr : ''}`;
+    }).filter(line => line !== null);
+
+    return lines.join('\n');
+}

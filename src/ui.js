@@ -3,7 +3,7 @@ import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
 import { setCustomColor } from './colorManager.js';
-import { exportAsCocoFormat, exportAsLiveJson } from './dataExporter.js';
+import { exportAsCocoFormat, exportAsLiveJson, exportAsYoloPose } from './dataExporter.js';
 
 export const ui = {};
 let tempShortcutConfig = {};
@@ -52,22 +52,38 @@ export function initUI() {
         btnResetShortcuts: document.getElementById('btnResetShortcuts'),
         btnSaveShortcuts: document.getElementById('btnSaveShortcuts'),
 
-        // JSON Sidebar
-        jsonSidebar: document.getElementById('json-sidebar'),
-        jsonSidebarToggle: document.getElementById('json-sidebar-toggle'),
+        // Label Sidebar
+        labelSidebar: document.getElementById('label-sidebar'),
+        labelSidebarToggle: document.getElementById('label-sidebar-toggle'),
         btnLiveJson: document.getElementById('btn-live-json'),
         btnCocoJson: document.getElementById('btn-coco-json'),
+        btnYoloPose: document.getElementById('btn-yolo-pose'),
         liveJsonContent: document.getElementById('live-json-content'),
         cocoJsonContent: document.getElementById('coco-json-content'),
+        yoloPoseContent: document.getElementById('yolo-pose-content'),
         liveJsonOutput: document.getElementById('live-json-output'),
         cocoJsonOutput: document.getElementById('coco-json-output'),
+        yoloPoseOutput: document.getElementById('yolo-pose-output'),
         btnCopyLive: document.getElementById('btn-copy-live'),
         btnDownloadLive: document.getElementById('btn-download-live'),
         btnCopyCoco: document.getElementById('btn-copy-coco'),
         btnDownloadCoco: document.getElementById('btn-download-coco'),
+        btnCopyYolo: document.getElementById('btn-copy-yolo'),
+        btnDownloadYolo: document.getElementById('btn-download-yolo'),
     });
 
-    ui.jsonSidebarToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>`;
+    ui.labelSidebarToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>`;
+
+    const copyIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>`;
+    const downloadIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>`;
+
+    ui.btnCopyLive.innerHTML = copyIcon;
+    ui.btnDownloadLive.innerHTML = downloadIcon;
+    ui.btnCopyCoco.innerHTML = copyIcon;
+    ui.btnDownloadCoco.innerHTML = downloadIcon;
+    ui.btnCopyYolo.innerHTML = copyIcon;
+    ui.btnDownloadYolo.innerHTML = downloadIcon;
+
     ui.btnPrev.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnShortcutSettings.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>`;
@@ -101,8 +117,8 @@ export function initUI() {
         showNotification('단축키가 기본값으로 초기화되었습니다.', 'info', ui);
     });
 
-    // Set initial state for JSON viewer
-    switchJsonViewTab('live');
+    // Set initial state for Label viewer
+    switchLabelViewTab('live');
     ui.classColorIndicator.addEventListener('click', () => {
         const colorInput = document.createElement('input');
         colorInput.type = 'color';
@@ -201,7 +217,7 @@ export function updateAllUI() {
     updateInfoBarUI();
     updateModeIndicatorUI();
     updateClassSelectorUI();
-    updateJsonView();
+    updateLabelView();
 }
 
 export function updateClassSelectorUI() {
@@ -341,34 +357,46 @@ export function updateDetailsPanelUI() {
     updateKeypointListUI(obj);
 }
 
-export function toggleJsonSidebar() {
-    ui.jsonSidebar.classList.toggle('active');
-    ui.jsonSidebarToggle.classList.toggle('active');
+export function toggleLabelSidebar() {
+    ui.labelSidebar.classList.toggle('active');
+    ui.labelSidebarToggle.classList.toggle('active');
 }
 
-export function switchJsonViewTab(tab) {
+export function switchLabelViewTab(tab) {
+    // Hide all content panels by setting display to 'none'
+    ui.liveJsonContent.style.display = 'none';
+    ui.cocoJsonContent.style.display = 'none';
+    ui.yoloPoseContent.style.display = 'none';
+
+    // Deactivate all tab buttons
+    ui.btnLiveJson.classList.remove('active');
+    ui.btnCocoJson.classList.remove('active');
+    ui.btnYoloPose.classList.remove('active');
+
+    // Show the selected tab by setting display to 'flex' and activate the button
     if (tab === 'live') {
-        ui.liveJsonContent.classList.remove('hidden');
-        ui.cocoJsonContent.classList.add('hidden');
+        ui.liveJsonContent.style.display = 'flex';
         ui.btnLiveJson.classList.add('active');
-        ui.btnCocoJson.classList.remove('active');
-    } else {
-        ui.liveJsonContent.classList.add('hidden');
-        ui.cocoJsonContent.classList.remove('hidden');
-        ui.btnLiveJson.classList.remove('active');
+    } else if (tab === 'coco') {
+        ui.cocoJsonContent.style.display = 'flex';
         ui.btnCocoJson.classList.add('active');
+    } else if (tab === 'yolo') {
+        ui.yoloPoseContent.style.display = 'flex';
+        ui.btnYoloPose.classList.add('active');
     }
 }
 
-export function updateJsonView() {
+export function updateLabelView() {
     if (state.currentImageIndex < 0) {
         ui.liveJsonOutput.textContent = '{}';
         ui.cocoJsonOutput.textContent = '{}';
+        ui.yoloPoseOutput.textContent = '';
         return;
     }
 
     ui.liveJsonOutput.textContent = exportAsLiveJson();
     ui.cocoJsonOutput.textContent = exportAsCocoFormat();
+    ui.yoloPoseOutput.textContent = exportAsYoloPose();
 }
 
 

@@ -1,5 +1,5 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleJsonSidebar, switchJsonViewTab } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleLabelSidebar, switchLabelViewTab } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
@@ -95,10 +95,11 @@ export function initializeEventListeners() {
         }
     });
 
-    // JSON Sidebar
-    ui.jsonSidebarToggle.addEventListener('click', toggleJsonSidebar);
-    ui.btnLiveJson.addEventListener('click', () => switchJsonViewTab('live'));
-    ui.btnCocoJson.addEventListener('click', () => switchJsonViewTab('coco'));
+    // Label Sidebar
+    ui.labelSidebarToggle.addEventListener('click', toggleLabelSidebar);
+    ui.btnLiveJson.addEventListener('click', () => switchLabelViewTab('live'));
+    ui.btnCocoJson.addEventListener('click', () => switchLabelViewTab('coco'));
+    ui.btnYoloPose.addEventListener('click', () => switchLabelViewTab('yolo'));
 
     ui.btnCopyLive.addEventListener('click', () => copyToClipboard(ui.liveJsonOutput.textContent, ui));
     ui.btnDownloadLive.addEventListener('click', () => {
@@ -108,6 +109,12 @@ export function initializeEventListeners() {
 
     ui.btnCopyCoco.addEventListener('click', () => copyToClipboard(ui.cocoJsonOutput.textContent, ui));
     ui.btnDownloadCoco.addEventListener('click', () => downloadFile(ui.cocoJsonOutput.textContent, 'coco_annotations.json'));
+
+    ui.btnCopyYolo.addEventListener('click', () => copyToClipboard(ui.yoloPoseOutput.textContent, ui));
+    ui.btnDownloadYolo.addEventListener('click', () => {
+        const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".txt";
+        downloadFile(ui.yoloPoseOutput.textContent, filename || 'annotation.txt');
+    });
 }
 
 function handleMouseDown(e) {
