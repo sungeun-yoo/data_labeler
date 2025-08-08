@@ -24,7 +24,7 @@ export const appState = {
     lastMouseWorldPos: null,
     isAltDown: false,
     currentClass: null,
-    hoveredPointInfo: null, // { type: 'keypoint'/'bbox', objIndex, ptIndex }
+    lastDragPoint: null,
 };
 
 export let transform = { scale: 1, offsetX: 0, offsetY: 0 };

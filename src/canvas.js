@@ -40,11 +40,11 @@ export function redrawCanvas() {
 
         if (obj.bbox) {
             drawBbox(obj, color, isSelected);
-            if (isSelected) drawResizeHandles(obj.bbox, index, color);
+            if (isSelected) drawResizeHandles(obj.bbox, color);
         }
         if (obj.keypoints) {
             drawSkeleton(obj, color, isSelected);
-            drawKeypoints(obj, index, color, isSelected);
+            drawKeypoints(obj, color, isSelected);
         }
     });
 
@@ -67,23 +67,15 @@ function drawBbox(obj, color, isSelected, isDrawing = false) {
     ctx.setLineDash([]);
 }
 
-function drawKeypoints(obj, objIndex, color, isSelected) {
-    let pointRadius = 5 / state.transform.scale;
+function drawKeypoints(obj, color, isSelected) {
+    const pointRadius = 5 / state.transform.scale;
     const ctx = ui.ctx;
 
     obj.keypoints.forEach((point, ptIndex) => {
         if (point.visible === 0) return;
 
-        let currentRadius = pointRadius;
-        const { hoveredPointInfo, isDraggingPoint } = state.appState;
-        const isHovered = hoveredPointInfo && hoveredPointInfo.type === 'keypoint' && hoveredPointInfo.objIndex === objIndex && hoveredPointInfo.ptIndex === ptIndex;
-
-        if (isHovered && !isDraggingPoint) {
-            currentRadius *= 1.5;
-        }
-
         ctx.beginPath();
-        ctx.arc(point.x, point.y, currentRadius, 0, 2 * Math.PI);
+        ctx.arc(point.x, point.y, pointRadius, 0, 2 * Math.PI);
 
         const isPointSelected = isSelected && ptIndex === state.appState.selectedPointIndex;
 
@@ -141,26 +133,18 @@ function drawGuideLines(pos) {
     ctx.restore();
 }
 
-function drawResizeHandles(bbox, objIndex, color) {
+function drawResizeHandles(bbox, color) {
     const [x1, y1, x2, y2] = bbox;
     const handles = { tl: [x1, y1], tr: [x2, y1], bl: [x1, y2], br: [x2, y2] };
-    let handleSize = 8 / state.transform.scale;
+    const handleSize = 8 / state.transform.scale;
     ui.ctx.fillStyle = color;
     ui.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
     ui.ctx.lineWidth = 1.5 / state.transform.scale;
 
     for (const key in handles) {
-        let currentHandleSize = handleSize;
-        const { hoveredPointInfo, isResizingBbox } = state.appState;
-        const isHovered = hoveredPointInfo && hoveredPointInfo.type === 'bbox' && hoveredPointInfo.objIndex === objIndex && hoveredPointInfo.handle === key;
-
-        if (isHovered && !isResizingBbox) {
-            currentHandleSize *= 1.5;
-        }
-
         const [x, y] = handles[key];
-        ui.ctx.fillRect(x - currentHandleSize / 2, y - currentHandleSize / 2, currentHandleSize, currentHandleSize);
-        ui.ctx.strokeRect(x - currentHandleSize / 2, y - currentHandleSize / 2, currentHandleSize, currentHandleSize);
+        ui.ctx.fillRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
+        ui.ctx.strokeRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
     }
 }
 
