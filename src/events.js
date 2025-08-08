@@ -3,7 +3,8 @@ import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarU
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
-import { showDeleteConfirmModal, isModalOpen } from './modal.js';
+import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
+import { shortcuts, numberShortcuts } from './shortcuts.js';
 
 function updateCursor() {
     if (state.appState.isPanning) {
@@ -262,35 +263,100 @@ function handleMouseUp(e) {
 }
 
 async function handleKeyDown(e) {
-    if (e.repeat) return;
+    if (e.repeat || e.target.tagName === 'INPUT') return;
     if (isModalOpen()) {
         if (e.key === 'Escape') hideDeleteConfirmModal();
         return;
     }
+
     if (e.key === 'Alt') {
         state.appState.isAltDown = true;
         updateCursor();
+        return;
     }
-    if (e.altKey || e.target.tagName === 'INPUT') return;
-    switch (e.key.toLowerCase()) {
-        case 'a': e.preventDefault(); enterBboxDrawingMode(); break;
-        case 's': e.preventDefault(); saveAllAnnotationsToZip(); break;
-        case 'z': if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); } break;
-        case 'escape':
-            e.preventDefault();
+    if (e.altKey) return;
+
+    const key = e.key.toLowerCase();
+    let action = null;
+
+    if ((e.ctrlKey || e.metaKey) && key === 's') {
+        action = shortcuts['s_modifier'];
+    } else if ((e.ctrlKey || e.metaKey) && key === 'z') {
+        action = shortcuts['z'];
+    } else if (numberShortcuts[key]) {
+        action = 'SELECT_CLASS';
+    } else {
+        action = shortcuts[key];
+    }
+
+    if (action) {
+        e.preventDefault();
+        await executeAction(action, key);
+    }
+}
+
+async function executeAction(action, key) {
+    switch (action) {
+        case 'PREV_IMAGE': await navigateImage(-1); break;
+        case 'NEXT_IMAGE': await navigateImage(1); break;
+        case 'PREV_LABEL': navigateLabel(-1); break;
+        case 'NEXT_LABEL': navigateLabel(1); break;
+        case 'ADD_OBJECT': enterBboxDrawingMode(); break;
+        case 'DELETE_OBJECT': deleteSelectedObject(); break;
+        case 'CANCEL_ACTION':
             state.appState.mode = 'IDLE';
             state.appState.selectedObjectIndex = -1;
             updateAllUI();
             redrawCanvas();
             break;
-        case 'delete': case 'backspace':
-            e.preventDefault();
-            deleteSelectedObject();
+        case 'UNDO': undo(); break;
+        case 'SAVE': saveAllAnnotationsToZip(); break;
+        case 'SELECT_CLASS':
+            const classIndex = numberShortcuts[key];
+            changeClassWithNumber(classIndex);
             break;
-        case 'arrowright': await navigateImage(1); break;
-        case 'arrowleft': await navigateImage(-1); break;
     }
 }
+
+function navigateLabel(direction) {
+    if (state.appState.selectedObjectIndex === -1) return;
+
+    const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+    if (!obj || !obj.className || !state.config[obj.className]) return;
+
+    const labels = state.config[obj.className].labels;
+    const numLabels = labels.length;
+    if (numLabels === 0) return;
+
+    let nextIndex = state.appState.selectedPointIndex + direction;
+
+    if (nextIndex >= numLabels) {
+        nextIndex = 0;
+    } else if (nextIndex < 0) {
+        nextIndex = numLabels - 1;
+    }
+
+    state.appState.selectedPointIndex = nextIndex;
+    updateAllUI();
+    redrawCanvas();
+}
+
+function changeClassWithNumber(classIndex) {
+    if (!state.config) return;
+    const classes = Object.keys(state.config);
+    if (classIndex > classes.length) return;
+
+    const newClassName = classes[classIndex - 1];
+
+    if (state.appState.selectedObjectIndex !== -1) {
+        changeObjectClass(newClassName);
+    } else {
+        state.appState.currentClass = newClassName;
+        updateAllUI(); // To update the main class selector
+        showNotification(`기본 클래스 변경됨: ${newClassName}`, 'info', ui);
+    }
+}
+
 
 function handleKeyUp(e) {
     if (e.key === 'Alt') {
