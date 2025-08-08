@@ -48,7 +48,8 @@ export function redrawCanvas() {
     });
 
     if (state.appState.mode === 'DRAWING_BBOX' && state.appState.currentBbox) {
-        drawBbox({ bbox: state.appState.currentBbox }, true, true);
+        const color = getColorForClass(state.appState.currentClass, allClasses);
+        drawBbox({ bbox: state.appState.currentBbox }, color, true, true);
     }
 
     ctx.restore();
