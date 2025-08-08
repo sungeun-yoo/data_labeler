@@ -272,30 +272,44 @@ function handleMouseMove(e) {
 
 function handleMouseUp(e) {
     if (state.appState.mode === 'DRAWING_BBOX' && state.appState.currentBbox) {
-        let newObjectIndex = -1;
-        if (state.appState.selectedObjectIndex !== -1) {
-            const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
-            obj.bbox = [...state.appState.currentBbox];
-            newObjectIndex = state.appState.selectedObjectIndex;
+        const [x1, y1, x2, y2] = state.appState.currentBbox;
+        const width = Math.abs(x1 - x2);
+        const height = Math.abs(y1 - y2);
+
+        if (width < 10 || height < 10) {
+            showNotification('BBox는 10x10 픽셀보다 커야 합니다.', 'error', ui);
+            state.appState.currentBbox = null;
+            state.appState.drawingBboxStartPoint = null;
+            state.appState.mode = 'IDLE'; // Or back to a default state
+            updateAllUI();
+            redrawCanvas();
         } else {
-            const newClass = state.appState.currentClass;
-            const newObject = {
-                id: `obj_${Date.now()}`,
-                className: newClass,
-                bbox: [...state.appState.currentBbox],
-                keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
-            };
-            state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
-            newObjectIndex = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.length - 1;
+            let newObjectIndex = -1;
+            if (state.appState.selectedObjectIndex !== -1) {
+                const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+                obj.bbox = [...state.appState.currentBbox];
+                newObjectIndex = state.appState.selectedObjectIndex;
+            } else {
+                const newClass = state.appState.currentClass;
+                const newObject = {
+                    id: `obj_${Date.now()}`,
+                    className: newClass,
+                    bbox: [...state.appState.currentBbox],
+                    keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
+                };
+                state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
+                newObjectIndex = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.length - 1;
+            }
+
+            selectObject(newObjectIndex);
+            state.appState.selectedPointIndex = 0; // Start with the first keypoint
+            state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
+            updateAllUI();
         }
 
-        selectObject(newObjectIndex);
-        state.appState.selectedPointIndex = 0; // Start with the first keypoint
-
+        // Reset drawing state regardless of outcome
         state.appState.drawingBboxStartPoint = null;
         state.appState.currentBbox = null;
-        state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
-        updateAllUI();
     }
 
     if (e.type === 'mouseout') state.appState.lastMouseWorldPos = null;
