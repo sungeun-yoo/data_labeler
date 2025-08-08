@@ -363,25 +363,25 @@ export function toggleLabelSidebar() {
 }
 
 export function switchLabelViewTab(tab) {
-    // Hide all content panels
-    ui.liveJsonContent.classList.add('hidden');
-    ui.cocoJsonContent.classList.add('hidden');
-    ui.yoloPoseContent.classList.add('hidden');
+    // Hide all content panels by setting display to 'none'
+    ui.liveJsonContent.style.display = 'none';
+    ui.cocoJsonContent.style.display = 'none';
+    ui.yoloPoseContent.style.display = 'none';
 
     // Deactivate all tab buttons
     ui.btnLiveJson.classList.remove('active');
     ui.btnCocoJson.classList.remove('active');
     ui.btnYoloPose.classList.remove('active');
 
-    // Show the selected tab and activate the button
+    // Show the selected tab by setting display to 'flex' and activate the button
     if (tab === 'live') {
-        ui.liveJsonContent.classList.remove('hidden');
+        ui.liveJsonContent.style.display = 'flex';
         ui.btnLiveJson.classList.add('active');
     } else if (tab === 'coco') {
-        ui.cocoJsonContent.classList.remove('hidden');
+        ui.cocoJsonContent.style.display = 'flex';
         ui.btnCocoJson.classList.add('active');
     } else if (tab === 'yolo') {
-        ui.yoloPoseContent.classList.remove('hidden');
+        ui.yoloPoseContent.style.display = 'flex';
         ui.btnYoloPose.classList.add('active');
     }
 }
