@@ -1,6 +1,6 @@
 import * as state from './state.js';
 import { redrawCanvas } from './canvas.js';
-import { formatBytes, showNotification } from './utils.js';
+import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
 
 export const ui = {};
@@ -33,6 +33,7 @@ export function initUI() {
         detailsWrapper: document.getElementById('details-wrapper'),
         classSelectorWrapper: document.getElementById('class-selector-wrapper'),
         classSelector: document.getElementById('class-selector'),
+        classColorIndicator: document.getElementById('class-color-indicator'),
 
         // Footer
         imageName: document.getElementById('imageName'),
@@ -159,15 +160,22 @@ export function updateClassSelectorUI() {
         return;
     }
     ui.classSelectorWrapper.classList.remove('hidden');
-    ui.classSelector.innerHTML = '';
+
     const classes = Object.keys(state.config);
-    classes.forEach(className => {
-        const option = document.createElement('option');
-        option.value = className;
-        option.textContent = className;
-        ui.classSelector.appendChild(option);
-    });
+
+    // Only redraw options if they've changed
+    if (ui.classSelector.options.length !== classes.length) {
+        ui.classSelector.innerHTML = '';
+        classes.forEach(className => {
+            const option = document.createElement('option');
+            option.value = className;
+            option.textContent = className;
+            ui.classSelector.appendChild(option);
+        });
+    }
+
     ui.classSelector.value = state.appState.currentClass;
+    ui.classColorIndicator.style.backgroundColor = getColorForClass(state.appState.currentClass, classes);
 }
 
 export function updateModeIndicatorUI() {
@@ -233,14 +241,22 @@ export function updateObjectListUI() {
         return;
     }
 
+    const allClasses = Object.keys(state.config || {});
+
     objects.forEach((obj, index) => {
         const item = document.createElement('div');
         item.className = 'object-item p-3 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors flex justify-between items-center';
         if (index === state.appState.selectedObjectIndex) item.classList.add('selected');
+
+        const color = getColorForClass(obj.className, allClasses);
+
         item.innerHTML = `
-            <div>
-                <span class="font-semibold">객체 ${index + 1}</span>
-                <span class="text-xs ml-2 px-2 py-1 rounded-full" style="background-color: var(--md-sys-color-surface-container-high);">${obj.className || 'N/A'}</span>
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${color};"></span>
+                <div>
+                    <span class="font-semibold">객체 ${index + 1}</span>
+                    <span class="text-xs ml-2 px-2 py-1 rounded-full" style="background-color: var(--md-sys-color-surface-container-high);">${obj.className || 'N/A'}</span>
+                </div>
             </div>
         `;
         item.dataset.objectId = index;

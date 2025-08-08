@@ -37,6 +37,7 @@ export function initializeEventListeners() {
 
     ui.classSelector.addEventListener('change', (e) => {
         state.appState.currentClass = e.target.value;
+        updateAllUI(); // Ensure color indicator updates
     });
 
     ui.canvas.addEventListener('mousedown', handleMouseDown);
