@@ -84,7 +84,6 @@ export function initUI() {
         populateShortcutModal();
         showNotification('단축키가 기본값으로 초기화되었습니다.', 'info', ui);
     });
-
     ui.classColorIndicator.addEventListener('click', () => {
         const colorInput = document.createElement('input');
         colorInput.type = 'color';
