@@ -116,7 +116,10 @@ export function exportAsYoloPose() {
 
     const lines = data.objects.map(obj => {
         const classIndex = classNames.indexOf(obj.className);
-        if (classIndex === -1) return null;
+        // Skip if the object has no class or no bounding box
+        if (classIndex === -1 || !obj.bbox) {
+            return null;
+        }
 
         // Normalize bbox
         const [x1, y1, x2, y2] = obj.bbox;
