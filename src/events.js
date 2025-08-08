@@ -303,17 +303,24 @@ function handleMouseUp(e) {
             updateAllUI();
             redrawCanvas();
         } else {
+            const normalizedBbox = [
+                Math.min(x1, x2),
+                Math.min(y1, y2),
+                Math.max(x1, x2),
+                Math.max(y1, y2)
+            ];
+
             let newObjectIndex = -1;
             if (state.appState.selectedObjectIndex !== -1) {
                 const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
-                obj.bbox = [...state.appState.currentBbox];
+                obj.bbox = normalizedBbox;
                 newObjectIndex = state.appState.selectedObjectIndex;
             } else {
                 const newClass = state.appState.currentClass;
                 const newObject = {
                     id: `obj_${Date.now()}`,
                     className: newClass,
-                    bbox: [...state.appState.currentBbox],
+                    bbox: normalizedBbox,
                     keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
                 };
                 state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
