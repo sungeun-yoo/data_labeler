@@ -115,36 +115,41 @@ export function exportAsYoloPose() {
     }
 
     const classNames = Object.keys(state.config || {});
+    const maxKeypoints = Math.max(0, ...Object.values(state.config || {}).map(c => c.labels.length));
 
     const lines = data.objects.map(obj => {
         const classIndex = classNames.indexOf(obj.className);
-        // Skip if the object has no class, no bounding box, or no keypoints
-        if (classIndex === -1 || !obj.bbox || !obj.keypoints) {
+        if (classIndex === -1 || !obj.bbox) {
             return null;
         }
 
-        // Normalize bbox
         const [x1, y1, x2, y2] = obj.bbox;
         const boxWidth = x2 - x1;
         const boxHeight = y2 - y1;
         const xCenter = x1 + boxWidth / 2;
         const yCenter = y1 + boxHeight / 2;
 
-        const normXCenter = xCenter / w;
-        const normYCenter = yCenter / h;
-        const normWidth = boxWidth / w;
-        const normHeight = boxHeight / h;
+        const bboxStr = [
+            (xCenter / w).toFixed(6),
+            (yCenter / h).toFixed(6),
+            (boxWidth / w).toFixed(6),
+            (boxHeight / h).toFixed(6)
+        ].join(' ');
 
-        const bboxStr = `${normXCenter.toFixed(6)} ${normYCenter.toFixed(6)} ${normWidth.toFixed(6)} ${normHeight.toFixed(6)}`;
-
-        // Normalize keypoints
-        const keypointsStr = obj.keypoints.map(p => {
+        const keypoints = obj.keypoints || [];
+        let keypointsStr = keypoints.map(p => {
             const normX = p.x / w;
             const normY = p.y / h;
             return `${normX.toFixed(6)} ${normY.toFixed(6)} ${p.visible}`;
         }).join(' ');
 
-        return `${classIndex} ${bboxStr} ${keypointsStr}`;
+        const numToPad = maxKeypoints - keypoints.length;
+        if (numToPad > 0) {
+            const padding = Array(numToPad).fill('0 0 0').join(' ');
+            keypointsStr = keypointsStr ? `${keypointsStr} ${padding}` : padding;
+        }
+
+        return `${classIndex} ${bboxStr}${keypointsStr ? ' ' + keypointsStr : ''}`;
     }).filter(line => line !== null);
 
     return lines.join('\n');
