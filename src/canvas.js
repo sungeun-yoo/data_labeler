@@ -71,18 +71,21 @@ function drawKeypoints(obj, color, isSelected) {
 
     obj.keypoints.forEach((point, ptIndex) => {
         if (point.visible === 0) return;
+
         ctx.beginPath();
         ctx.arc(point.x, point.y, pointRadius, 0, 2 * Math.PI);
 
         const isPointSelected = isSelected && ptIndex === state.appState.selectedPointIndex;
 
-        ctx.fillStyle = isPointSelected ? '#FF00FF' : color; // Use a distinct selection color like magenta
-        ctx.fill();
+        ctx.fillStyle = isPointSelected ? '#FF00FF' : color;
+        ctx.strokeStyle = isPointSelected ? '#FF00FF' : color;
+        ctx.lineWidth = isSelected ? 2.5 / state.transform.scale : 1.5 / state.transform.scale;
 
-        // Add a small border to the points to make them stand out
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.lineWidth = 1 / state.transform.scale;
-        ctx.stroke();
+        if (point.visible === 1) { // Occluded: draw hollow circle
+            ctx.stroke();
+        } else { // Visible (2) or other: draw filled circle
+            ctx.fill();
+        }
     });
 }
 
