@@ -16,7 +16,6 @@ export const appState = {
     currentBbox: null,
     isPanning: false,
     isDraggingPoint: false,
-    isDraggingBbox: false,
     isResizingBbox: false,
     resizeHandle: null,
     lastPanPoint: { x: 0, y: 0 },

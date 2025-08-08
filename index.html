@@ -81,21 +81,20 @@
         <!-- 중앙 캔버스 -->
         <main id="split-0" class="rounded-2xl shadow-lg flex items-center justify-center overflow-hidden relative" style="background-color: #000;">
             <canvas id="mainCanvas" class="rounded-md shadow-inner"></canvas>
-            <div id="mode-indicator" class="absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded hidden"></div>
+            <div id="mode-indicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-2 py-1 rounded hidden"></div>
             <div id="canvas-loader" class="absolute inset-0 bg-black bg-opacity-50 flex-col items-center justify-center text-white text-lg hidden"></div>
         </main>
 
         <!-- 오른쪽 패널 -->
         <aside id="split-1" class="rounded-2xl shadow-lg flex flex-col" style="background-color: var(--md-sys-color-surface-container);">
-            <div class="p-4 border-b space-y-4" style="border-color: var(--md-sys-color-outline-variant);">
-                <div id="class-selector-wrapper" class="hidden">
-                    <label for="class-selector" class="block text-sm font-medium mb-1">새 객체 클래스</label>
+            <div class="p-4 border-b flex items-center gap-4" style="border-color: var(--md-sys-color-outline-variant);">
+                <div id="class-selector-wrapper" class="hidden flex-grow">
                     <div class="flex items-center gap-2">
-                        <select id="class-selector" class="w-full rounded-md p-2 flex-grow" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
                         <span id="class-color-indicator" class="w-5 h-5 rounded-full block flex-shrink-0"></span>
+                        <select id="class-selector" class="w-full rounded-md p-2 flex-grow" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
                     </div>
                 </div>
-                <button id="btnAddObject" class="btn btn-filled w-full" disabled>+ 객체 추가 (A)</button>
+                <button id="btnAddObject" class="btn btn-filled" disabled>+ 객체 추가</button>
             </div>
             <div class="flex-grow details-scroll-container">
                 <div id="config-help" class="p-4 text-sm" style="color: var(--md-sys-color-on-surface-variant);"></div>

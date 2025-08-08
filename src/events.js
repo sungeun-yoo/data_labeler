@@ -63,17 +63,33 @@ export function initializeEventListeners() {
     // Event delegation for dynamic elements
     ui.objectListWrapper.addEventListener('click', (e) => {
         const item = e.target.closest('.object-item');
-        if (item && item.dataset.objectId) {
-            selectObject(parseInt(item.dataset.objectId));
+        if (!item) return;
+
+        const objectId = parseInt(item.dataset.objectId);
+        const actionButton = e.target.closest('[data-action]');
+
+        if (actionButton) {
+            e.stopPropagation(); // Prevent selection when clicking a button
+            const action = actionButton.dataset.action;
+            const objects = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects;
+            const object = objects[objectId];
+
+            if (action === 'toggle-visibility') {
+                state.pushHistory(JSON.parse(JSON.stringify(objects)));
+                object.hidden = !object.hidden;
+                updateAllUI();
+                redrawCanvas();
+            } else if (action === 'delete-object') {
+                // Temporarily select the object to delete, as deleteSelectedObject depends on it
+                state.appState.selectedObjectIndex = objectId;
+                deleteSelectedObject();
+            }
+        } else {
+            selectObject(objectId);
         }
     });
 
     ui.detailsWrapper.addEventListener('click', (e) => {
-        const deleteButton = e.target.closest('#btnDeleteObject');
-        if (deleteButton) {
-            deleteSelectedObject();
-            return;
-        }
 
         const addBboxButton = e.target.closest('button[data-action="add-bbox"]');
         if (addBboxButton) {
@@ -168,9 +184,11 @@ function handleMouseDown(e) {
         if (state.appState.selectedPointIndex !== -1 && isPointInBbox(worldPos, selectedObject.bbox)) {
             state.pushHistory(JSON.parse(JSON.stringify(objects)));
             const pointToUpdate = selectedObject.keypoints[state.appState.selectedPointIndex];
-            pointToUpdate.x = worldPos.x;
-            pointToUpdate.y = worldPos.y;
-            pointToUpdate.visible = 2;
+            if (pointToUpdate) {
+                pointToUpdate.x = worldPos.x;
+                pointToUpdate.y = worldPos.y;
+                pointToUpdate.visible = 2;
+            }
             const labels = state.config[selectedObject.className].labels;
             const nextPointIndex = (state.appState.selectedPointIndex + 1) % labels.length;
             state.appState.selectedPointIndex = nextPointIndex;
@@ -185,7 +203,7 @@ function handleMouseDown(e) {
             if (state.appState.selectedObjectIndex !== i) {
                 selectObject(i);
             }
-            state.appState.isDraggingBbox = true;
+            // Dragging logic removed as per user request
             return;
         }
     }
@@ -254,39 +272,69 @@ function handleMouseMove(e) {
     redrawCanvas();
 }
 
+
 function handleMouseUp(e) {
     if (state.appState.mode === 'DRAWING_BBOX' && state.appState.currentBbox) {
-        let newObjectIndex = -1;
-        if (state.appState.selectedObjectIndex !== -1) {
-            const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
-            obj.bbox = [...state.appState.currentBbox];
-            newObjectIndex = state.appState.selectedObjectIndex;
+        const [x1, y1, x2, y2] = state.appState.currentBbox;
+        const width = Math.abs(x1 - x2);
+        const height = Math.abs(y1 - y2);
+
+        if (width < 10 || height < 10) {
+            showNotification('BBox는 10x10 픽셀보다 커야 합니다.', 'error', ui);
+            state.appState.currentBbox = null;
+            state.appState.drawingBboxStartPoint = null;
+            state.appState.mode = 'IDLE'; // Or back to a default state
+            updateAllUI();
+            redrawCanvas();
         } else {
-            const newClass = state.appState.currentClass;
-            const newObject = {
-                id: `obj_${Date.now()}`,
-                className: newClass,
-                bbox: [...state.appState.currentBbox],
-                keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
-            };
-            state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
-            newObjectIndex = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.length - 1;
+            const normalizedBbox = [
+                Math.min(x1, x2),
+                Math.min(y1, y2),
+                Math.max(x1, x2),
+                Math.max(y1, y2)
+            ];
+
+            let newObjectIndex = -1;
+            if (state.appState.selectedObjectIndex !== -1) {
+                const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
+                obj.bbox = normalizedBbox;
+                newObjectIndex = state.appState.selectedObjectIndex;
+            } else {
+                const newClass = state.appState.currentClass;
+                const newObject = {
+                    id: `obj_${Date.now()}`,
+                    className: newClass,
+                    bbox: normalizedBbox,
+                    keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
+                };
+                state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
+                newObjectIndex = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.length - 1;
+            }
+
+            selectObject(newObjectIndex);
+
+            const newObject = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[newObjectIndex];
+            if (newObject.keypoints && newObject.keypoints.length > 0) {
+                state.appState.selectedPointIndex = 0; // Start with the first keypoint
+                state.appState.mode = 'EDITING_POSE';
+            } else {
+                state.appState.selectedPointIndex = -1;
+                state.appState.mode = 'IDLE';
+            }
+
+            state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
+            updateAllUI();
         }
 
-        selectObject(newObjectIndex);
-        state.appState.selectedPointIndex = 0; // Start with the first keypoint
-
+        // Reset drawing state regardless of outcome
         state.appState.drawingBboxStartPoint = null;
         state.appState.currentBbox = null;
-        state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
-        updateAllUI();
     }
 
     if (e.type === 'mouseout') state.appState.lastMouseWorldPos = null;
 
     state.appState.isPanning = false;
     state.appState.isDraggingPoint = false;
-    state.appState.isDraggingBbox = false;
     state.appState.isResizingBbox = false;
     state.appState.resizeHandle = null;
     updateCursor();
@@ -381,10 +429,9 @@ function changeClassWithNumber(classIndex) {
 
     const newClassName = classes[classIndex - 1];
 
-    // Per user request, number shortcuts should only change the default class.
     state.appState.currentClass = newClassName;
-    updateAllUI(); // This will update the main class selector dropdown.
-    showNotification(`기본 클래스 변경됨: ${newClassName}`, 'info', ui);
+    showNotification(`${newClassName} 클래스로 객체 그리기를 시작합니다.`, 'info', ui);
+    enterBboxDrawingMode();
 }
 
 

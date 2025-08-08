@@ -302,27 +302,40 @@ export function updateObjectListUI() {
     ui.objectListWrapper.innerHTML = '';
     const objects = state.annotationData[state.imageFiles[state.currentImageIndex]?.name]?.objects || [];
     if (objects.length === 0) {
-        ui.objectListWrapper.innerHTML = `<p class="text-center text-gray-500 p-4">객체가 없습니다. <br>'A' 키를 눌러 추가하세요.</p>`;
+        ui.objectListWrapper.innerHTML = `<p class="text-center text-gray-500 p-4">객체가 없습니다. <br>'+ 객체 추가' 버튼을 눌러 추가하세요.</p>`;
         ui.detailsWrapper.classList.add('hidden');
         return;
     }
 
     const allClasses = Object.keys(state.config || {});
 
+    const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
+    const eyeSlashIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.242 4.242a2 2 0 012.828 2.828l-2.828-2.828zM10 17a7 7 0 01-7-7c0-1.789.66-3.425 1.76-4.673l1.428 1.428A4.982 4.982 0 008 10a5 5 0 004.899 5.002l1.43 1.428A6.971 6.971 0 0110 17z" clip-rule="evenodd" /></svg>`;
+    const trashIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
+
+
     objects.forEach((obj, index) => {
         const item = document.createElement('div');
-        item.className = 'object-item p-3 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors flex justify-between items-center';
+        item.className = 'object-item p-2 rounded-lg cursor-pointer transition-colors flex justify-between items-center';
         if (index === state.appState.selectedObjectIndex) item.classList.add('selected');
 
         const color = getColorForClass(obj.className, allClasses);
 
         item.innerHTML = `
-            <div class="flex items-center gap-3">
-                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${color};"></span>
-                <div>
+            <div class="flex items-center gap-3 flex-grow">
+                <span class="w-4 h-4 rounded-full flex-shrink-0" style="background-color: ${color};"></span>
+                <div class="flex-grow">
                     <span class="font-semibold">객체 ${index + 1}</span>
                     <span class="text-xs ml-2 px-2 py-1 rounded-full" style="background-color: var(--md-sys-color-surface-container-high);">${obj.className || 'N/A'}</span>
                 </div>
+            </div>
+            <div class="flex items-center gap-1 object-item-actions">
+                <button class="btn btn-icon" data-action="toggle-visibility" title="객체 숨기기/보이기">
+                    ${obj.hidden ? eyeSlashIcon : eyeIcon}
+                </button>
+                <button class="btn btn-icon btn-danger" data-action="delete-object" title="객체 삭제">
+                    ${trashIcon}
+                </button>
             </div>
         `;
         item.dataset.objectId = index;
@@ -341,7 +354,6 @@ export function updateDetailsPanelUI() {
     ui.detailsWrapper.innerHTML = `
         <div id="details-header" class="flex justify-between items-center p-2">
             <h3 class="text-md font-semibold" id="details-title"></h3>
-            <button id="btnDeleteObject" class="btn btn-icon btn-danger" title="선택된 객체 삭제 (Delete)"></button>
         </div>
         <div id="class-info" class="p-2 text-sm space-y-1"></div>
         <div id="bbox-info" class="p-2 text-sm space-y-2"></div>
@@ -349,8 +361,6 @@ export function updateDetailsPanelUI() {
     `;
 
     document.getElementById('details-title').textContent = `객체 ${state.appState.selectedObjectIndex + 1} 상세정보`;
-    const deleteButton = document.getElementById('btnDeleteObject');
-    deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
 
     updateClassInfoUI(obj);
     updateBboxInfoUI(obj);
