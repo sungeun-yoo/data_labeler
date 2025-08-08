@@ -2,6 +2,7 @@ import * as state from './state.js';
 import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
+import { setCustomColor } from './colorManager.js';
 
 export const ui = {};
 let tempShortcutConfig = {};
@@ -82,6 +83,36 @@ export function initUI() {
         shortcutManager.resetShortcuts();
         populateShortcutModal();
         showNotification('단축키가 기본값으로 초기화되었습니다.', 'info', ui);
+    });
+
+    ui.classColorIndicator.addEventListener('click', () => {
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.style.display = 'none';
+
+        // Set initial value to current color to open picker with it selected
+        const currentBgColor = ui.classColorIndicator.style.backgroundColor;
+        if (currentBgColor) {
+            // Need to convert rgb to hex for the color input
+            const rgb = currentBgColor.match(/\d+/g);
+            if (rgb) {
+                colorInput.value = `#${(+rgb[0]).toString(16).padStart(2, '0')}${(+rgb[1]).toString(16).padStart(2, '0')}${(+rgb[2]).toString(16).padStart(2, '0')}`;
+            }
+        }
+
+        colorInput.addEventListener('change', (e) => {
+            const newColor = e.target.value;
+            const className = state.appState.currentClass;
+            if (className) {
+                setCustomColor(className, newColor);
+                updateAllUI(); // Redraw UI to reflect new color
+                redrawCanvas(); // Redraw canvas to reflect new color
+            }
+            document.body.removeChild(colorInput);
+        });
+
+        document.body.appendChild(colorInput);
+        colorInput.click();
     });
 
     updateHelpUI();

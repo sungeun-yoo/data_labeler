@@ -1,5 +1,6 @@
 import * as state from './state.js';
 import { ui } from './ui.js';
+import { getColorForClass } from './utils.js';
 
 export function handleResize() {
     if (!ui.canvasWrapper) return;
@@ -10,25 +11,6 @@ export function handleResize() {
         centerImage();
         redrawCanvas();
     }
-}
-
-const CLASS_COLORS = [
-    'rgba(16, 185, 129, 0.8)', // Emerald
-    'rgba(245, 158, 11, 0.8)',  // Amber
-    'rgba(239, 68, 68, 0.8)',   // Red
-    'rgba(139, 92, 246, 0.8)',  // Violet
-    'rgba(59, 130, 246, 1)',    // Blue (selected)
-];
-
-let classColorMap = {};
-let colorIndex = 0;
-
-function getColorForClass(className) {
-    if (!classColorMap[className]) {
-        classColorMap[className] = CLASS_COLORS[colorIndex % CLASS_COLORS.length];
-        colorIndex++;
-    }
-    return classColorMap[className];
 }
 
 export function redrawCanvas() {
@@ -49,16 +31,19 @@ export function redrawCanvas() {
     }
 
     const objects = state.annotationData[state.imageFiles[state.currentImageIndex]?.name]?.objects || [];
+    const allClasses = Object.keys(state.config || {});
 
     objects.forEach((obj, index) => {
         const isSelected = index === state.appState.selectedObjectIndex;
+        const color = getColorForClass(obj.className, allClasses);
+
         if (obj.bbox) {
-            drawBbox(obj, isSelected);
-            if (isSelected) drawResizeHandles(obj.bbox);
+            drawBbox(obj, color, isSelected);
+            if (isSelected) drawResizeHandles(obj.bbox, color);
         }
         if (obj.keypoints) {
-            drawSkeleton(obj, isSelected);
-            drawKeypoints(obj, index, isSelected);
+            drawSkeleton(obj, color, isSelected);
+            drawKeypoints(obj, color, isSelected);
         }
     });
 
@@ -69,50 +54,55 @@ export function redrawCanvas() {
     ctx.restore();
 }
 
-function drawBbox(obj, isSelected, isDrawing = false) {
+function drawBbox(obj, color, isSelected, isDrawing = false) {
     const [x1, y1, x2, y2] = obj.bbox;
-    ui.ctx.lineWidth = isSelected ? 4 / state.transform.scale : 2 / state.transform.scale;
-    let color = 'rgba(59, 130, 246, 1)'; // Default to blue for selected/drawing
-    if (!isSelected && obj.className) {
-        color = getColorForClass(obj.className);
-    }
-    ui.ctx.strokeStyle = color;
-    if (isDrawing) ui.ctx.setLineDash([5, 5]);
-    ui.ctx.strokeRect(Math.min(x1,x2), Math.min(y1,y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
-    ui.ctx.setLineDash([]);
+    const ctx = ui.ctx;
+    ctx.lineWidth = isSelected ? 4 / state.transform.scale : 2 / state.transform.scale;
+    ctx.strokeStyle = color;
+
+    if (isDrawing) ctx.setLineDash([5, 5]);
+    ctx.strokeRect(Math.min(x1,x2), Math.min(y1,y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+    ctx.setLineDash([]);
 }
 
-function drawKeypoints(obj, objIndex, isSelected) {
+function drawKeypoints(obj, color, isSelected) {
     const pointRadius = 5 / state.transform.scale;
+    const ctx = ui.ctx;
+
     obj.keypoints.forEach((point, ptIndex) => {
         if (point.visible === 0) return;
-        ui.ctx.beginPath();
-        ui.ctx.arc(point.x, point.y, pointRadius, 0, 2 * Math.PI);
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, pointRadius, 0, 2 * Math.PI);
 
         const isPointSelected = isSelected && ptIndex === state.appState.selectedPointIndex;
 
-        if (isPointSelected) ui.ctx.fillStyle = 'rgba(236, 72, 153, 1)';
-        else ui.ctx.fillStyle = point.visible === 2 ? 'rgba(52, 211, 153, 0.9)' : 'rgba(251, 191, 36, 0.9)';
+        ctx.fillStyle = isPointSelected ? '#FF00FF' : color; // Use a distinct selection color like magenta
+        ctx.fill();
 
-        ui.ctx.fill();
+        // Add a small border to the points to make them stand out
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.lineWidth = 1 / state.transform.scale;
+        ctx.stroke();
     });
 }
 
-function drawSkeleton(obj, isSelected) {
+function drawSkeleton(obj, color, isSelected) {
     if (!obj.className || !state.config[obj.className]) return;
 
     const skeleton = state.config[obj.className].skeleton;
     const points = obj.keypoints;
+    const ctx = ui.ctx;
 
-    ui.ctx.lineWidth = 3 / state.transform.scale;
-    ui.ctx.strokeStyle = isSelected ? 'rgba(96, 165, 250, 0.9)' : 'rgba(96, 165, 250, 0.5)';
+    ctx.lineWidth = isSelected ? 4 / state.transform.scale : 2 / state.transform.scale;
+    ctx.strokeStyle = color;
+
     skeleton.forEach(([p1Index, p2Index]) => {
         const p1 = points[p1Index], p2 = points[p2Index];
         if (p1?.visible > 0 && p2?.visible > 0) {
-            ui.ctx.beginPath();
-            ui.ctx.moveTo(p1.x, p1.y);
-            ui.ctx.lineTo(p2.x, p2.y);
-            ui.ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
         }
     });
 }
@@ -138,12 +128,12 @@ function drawGuideLines(pos) {
     ctx.restore();
 }
 
-function drawResizeHandles(bbox) {
+function drawResizeHandles(bbox, color) {
     const [x1, y1, x2, y2] = bbox;
     const handles = { tl: [x1, y1], tr: [x2, y1], bl: [x1, y2], br: [x2, y2] };
     const handleSize = 8 / state.transform.scale;
-    ui.ctx.fillStyle = 'rgba(59, 130, 246, 1)';
-    ui.ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+    ui.ctx.fillStyle = color;
+    ui.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
     ui.ctx.lineWidth = 1.5 / state.transform.scale;
 
     for (const key in handles) {
