@@ -16,7 +16,6 @@ export const appState = {
     currentBbox: null,
     isPanning: false,
     isDraggingPoint: false,
-    isDraggingBbox: false,
     isResizingBbox: false,
     resizeHandle: null,
     lastPanPoint: { x: 0, y: 0 },
@@ -24,7 +23,6 @@ export const appState = {
     lastMouseWorldPos: null,
     isAltDown: false,
     currentClass: null,
-    lastDragPoint: null,
 };
 
 export let transform = { scale: 1, offsetX: 0, offsetY: 0 };

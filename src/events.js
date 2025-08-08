@@ -201,9 +201,7 @@ function handleMouseDown(e) {
             if (state.appState.selectedObjectIndex !== i) {
                 selectObject(i);
             }
-            state.pushHistory(JSON.parse(JSON.stringify(objects)));
-            state.appState.isDraggingBbox = true;
-            state.appState.lastDragPoint = worldPos;
+            // Dragging logic removed as per user request
             return;
         }
     }
@@ -267,22 +265,6 @@ function handleMouseMove(e) {
         point.x = worldPos.x;
         point.y = worldPos.y;
         updateKeypointListUI(obj);
-    } else if (state.appState.isDraggingBbox) {
-        const dx = worldPos.x - state.appState.lastDragPoint.x;
-        const dy = worldPos.y - state.appState.lastDragPoint.y;
-        const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
-
-        obj.bbox[0] += dx;
-        obj.bbox[1] += dy;
-        obj.bbox[2] += dx;
-        obj.bbox[3] += dy;
-
-        obj.keypoints.forEach(p => {
-            p.x += dx;
-            p.y += dy;
-        });
-
-        state.appState.lastDragPoint = worldPos;
     }
 
     redrawCanvas();
@@ -342,7 +324,6 @@ function handleMouseUp(e) {
 
     state.appState.isPanning = false;
     state.appState.isDraggingPoint = false;
-    state.appState.isDraggingBbox = false;
     state.appState.isResizingBbox = false;
     state.appState.resizeHandle = null;
     updateCursor();
