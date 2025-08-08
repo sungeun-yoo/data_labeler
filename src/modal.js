@@ -25,7 +25,7 @@ export function showDeleteConfirmModal() {
     confirmButton.focus();
 }
 
-function hideDeleteConfirmModal() {
+export function hideDeleteConfirmModal() {
     const modal = document.getElementById('deleteConfirmModal');
     if (modal) modal.remove();
 }
