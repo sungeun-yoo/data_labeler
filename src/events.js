@@ -17,6 +17,11 @@ function updateCursor() {
         return;
     }
 
+    if (state.appState.hoveredPointInfo) {
+        ui.canvas.style.cursor = 'grab';
+        return;
+    }
+
     if (state.appState.mode === 'EDITING_POSE' || state.appState.mode === 'DRAWING_BBOX') {
         ui.canvas.style.cursor = 'crosshair';
         return;
@@ -237,6 +242,17 @@ function handleMouseMove(e) {
     const worldPos = screenToWorld(pos.x, pos.y, state.transform);
     state.appState.lastMouseWorldPos = worldPos;
 
+    let needsRedraw = false;
+    const previousHover = JSON.stringify(state.appState.hoveredPointInfo);
+
+    if (!state.appState.isPanning && !state.appState.isDraggingPoint && !state.appState.isResizingBbox) {
+        state.appState.hoveredPointInfo = getHoveredPoint(worldPos);
+    }
+
+    if (JSON.stringify(state.appState.hoveredPointInfo) !== previousHover) {
+        needsRedraw = true;
+    }
+
     updateCursor();
 
     if (state.appState.isPanning) {
@@ -265,10 +281,45 @@ function handleMouseMove(e) {
         point.x = worldPos.x;
         point.y = worldPos.y;
         updateKeypointListUI(obj);
+        needsRedraw = true;
     }
 
-    redrawCanvas();
+    if (needsRedraw) {
+        redrawCanvas();
+    }
 }
+
+function getHoveredPoint(worldPos) {
+    const objects = state.annotationData[state.imageFiles[state.currentImageIndex]?.name]?.objects || [];
+    const clickRadius = 8 / state.transform.scale;
+
+    // Check for hovered resize handles on the selected object first
+    if (state.appState.selectedObjectIndex !== -1) {
+        const selectedObject = objects[state.appState.selectedObjectIndex];
+        if (selectedObject && selectedObject.bbox) {
+            const handle = getResizeHandleAt(worldPos, selectedObject.bbox, state.transform);
+            if (handle) {
+                return { type: 'bbox', objIndex: state.appState.selectedObjectIndex, handle: handle };
+            }
+        }
+    }
+
+    // Check for hovered keypoints on the selected object
+    if (state.appState.selectedObjectIndex !== -1) {
+        const selectedObject = objects[state.appState.selectedObjectIndex];
+        if (selectedObject && selectedObject.keypoints) {
+            for (let j = 0; j < selectedObject.keypoints.length; j++) {
+                const p = selectedObject.keypoints[j];
+                if (p.visible > 0 && Math.hypot(p.x - worldPos.x, p.y - worldPos.y) < clickRadius) {
+                    return { type: 'keypoint', objIndex: state.appState.selectedObjectIndex, ptIndex: j };
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
 
 function handleMouseUp(e) {
     if (state.appState.mode === 'DRAWING_BBOX' && state.appState.currentBbox) {
@@ -319,6 +370,7 @@ function handleMouseUp(e) {
     state.appState.isDraggingBbox = false;
     state.appState.isResizingBbox = false;
     state.appState.resizeHandle = null;
+    state.appState.hoveredPointInfo = null;
     updateCursor();
     redrawCanvas();
 }
