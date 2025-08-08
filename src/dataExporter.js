@@ -96,3 +96,51 @@ export function exportAsCocoFormat() {
 
     return JSON.stringify(cocoData, null, 2);
 }
+
+/**
+ * Converts the annotation data for the current image to YOLO pose format.
+ * Format per line: class_idx x_center y_center width height x1 y1 v1 x2 y2 v2 ...
+ * All coordinates are normalized.
+ */
+export function exportAsYoloPose() {
+    const currentFile = state.imageFiles[state.currentImageIndex];
+    if (!currentFile) return '';
+
+    const data = state.annotationData[currentFile.name];
+    if (!data || !data.objects || data.objects.length === 0) return '';
+
+    const { image_width: w, image_height: h } = data;
+    if (!w || !h) return ''; // Cannot normalize without image dimensions
+
+    const classNames = Object.keys(state.config || {});
+
+    const lines = data.objects.map(obj => {
+        const classIndex = classNames.indexOf(obj.className);
+        if (classIndex === -1) return null;
+
+        // Normalize bbox
+        const [x1, y1, x2, y2] = obj.bbox;
+        const boxWidth = x2 - x1;
+        const boxHeight = y2 - y1;
+        const xCenter = x1 + boxWidth / 2;
+        const yCenter = y1 + boxHeight / 2;
+
+        const normXCenter = xCenter / w;
+        const normYCenter = yCenter / h;
+        const normWidth = boxWidth / w;
+        const normHeight = boxHeight / h;
+
+        const bboxStr = `${normXCenter.toFixed(6)} ${normYCenter.toFixed(6)} ${normWidth.toFixed(6)} ${normHeight.toFixed(6)}`;
+
+        // Normalize keypoints
+        const keypointsStr = obj.keypoints.map(p => {
+            const normX = p.x / w;
+            const normY = p.y / h;
+            return `${normX.toFixed(6)} ${normY.toFixed(6)} ${p.visible}`;
+        }).join(' ');
+
+        return `${classIndex} ${bboxStr} ${keypointsStr}`;
+    }).filter(line => line !== null);
+
+    return lines.join('\n');
+}
