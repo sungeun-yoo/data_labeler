@@ -63,17 +63,33 @@ export function initializeEventListeners() {
     // Event delegation for dynamic elements
     ui.objectListWrapper.addEventListener('click', (e) => {
         const item = e.target.closest('.object-item');
-        if (item && item.dataset.objectId) {
-            selectObject(parseInt(item.dataset.objectId));
+        if (!item) return;
+
+        const objectId = parseInt(item.dataset.objectId);
+        const actionButton = e.target.closest('[data-action]');
+
+        if (actionButton) {
+            e.stopPropagation(); // Prevent selection when clicking a button
+            const action = actionButton.dataset.action;
+            const objects = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects;
+            const object = objects[objectId];
+
+            if (action === 'toggle-visibility') {
+                state.pushHistory(JSON.parse(JSON.stringify(objects)));
+                object.hidden = !object.hidden;
+                updateAllUI();
+                redrawCanvas();
+            } else if (action === 'delete-object') {
+                // Temporarily select the object to delete, as deleteSelectedObject depends on it
+                state.appState.selectedObjectIndex = objectId;
+                deleteSelectedObject();
+            }
+        } else {
+            selectObject(objectId);
         }
     });
 
     ui.detailsWrapper.addEventListener('click', (e) => {
-        const deleteButton = e.target.closest('#btnDeleteObject');
-        if (deleteButton) {
-            deleteSelectedObject();
-            return;
-        }
 
         const addBboxButton = e.target.closest('button[data-action="add-bbox"]');
         if (addBboxButton) {

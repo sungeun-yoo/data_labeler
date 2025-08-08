@@ -34,6 +34,7 @@ export function redrawCanvas() {
     const allClasses = Object.keys(state.config || {});
 
     objects.forEach((obj, index) => {
+        if (obj.hidden) return; // Do not draw hidden objects
         const isSelected = index === state.appState.selectedObjectIndex;
         const color = getColorForClass(obj.className, allClasses);
 

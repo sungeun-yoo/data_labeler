@@ -7,7 +7,6 @@ export const shortcuts = {
     'arrowright': 'NEXT_IMAGE',
     'a': 'PREV_LABEL',
     's': 'NEXT_LABEL',
-    'n': 'ADD_OBJECT',
     'delete': 'DELETE_OBJECT',
     'backspace': 'DELETE_OBJECT',
     'escape': 'CANCEL_ACTION',
