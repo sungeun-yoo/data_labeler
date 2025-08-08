@@ -1,11 +1,14 @@
 import * as state from './state.js';
 import { redrawCanvas } from './canvas.js';
-import { formatBytes } from './utils.js';
+import { formatBytes, showNotification } from './utils.js';
+import * as shortcutManager from './shortcutManager.js';
 
 export const ui = {};
+let tempShortcutConfig = {};
 
 export function initUI() {
     Object.assign(ui, {
+        // Top bar
         btnLoadConfig: document.getElementById('btnLoadConfig'),
         configLoader: document.getElementById('configLoader'),
         btnLoadDir: document.getElementById('btnLoadDir'),
@@ -14,27 +17,131 @@ export function initUI() {
         btnPrev: document.getElementById('btnPrev'),
         btnNext: document.getElementById('btnNext'),
         imageProgress: document.getElementById('imageProgress'),
+        btnShortcutSettings: document.getElementById('btnShortcutSettings'),
+
+        // Canvas
         canvas: document.getElementById('mainCanvas'),
         ctx: document.getElementById('mainCanvas').getContext('2d'),
         canvasWrapper: document.getElementById('split-0'),
         canvasLoader: document.getElementById('canvas-loader'),
+        modeIndicator: document.getElementById('mode-indicator'),
+
+        // Right panel
         btnAddObject: document.getElementById('btnAddObject'),
         configHelp: document.getElementById('config-help'),
         objectListWrapper: document.getElementById('object-list-wrapper'),
         detailsWrapper: document.getElementById('details-wrapper'),
-        modeIndicator: document.getElementById('mode-indicator'),
-        toastPopup: document.getElementById('toast-popup'),
         classSelectorWrapper: document.getElementById('class-selector-wrapper'),
         classSelector: document.getElementById('class-selector'),
+
+        // Footer
+        imageName: document.getElementById('imageName'),
+        imageDimensions: document.getElementById('imageDimensions'),
+        imageSize: document.getElementById('imageSize'),
+        notificationMessage: document.getElementById('notificationMessage'),
+        zoomLevel: document.getElementById('zoomLevel'),
+
+        // Modals & Popups
+        toastPopup: document.getElementById('toast-popup'),
+        shortcutModal: document.getElementById('shortcutModal'),
+        btnModalClose: document.getElementById('btnModalClose'),
+        shortcutList: document.getElementById('shortcutList'),
+        btnResetShortcuts: document.getElementById('btnResetShortcuts'),
+        btnSaveShortcuts: document.getElementById('btnSaveShortcuts'),
     });
 
     ui.btnPrev.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
+    ui.btnShortcutSettings.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>`;
     ui.canvasLoader.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p>이미지 로딩 중...</p>`;
     document.querySelector('footer').innerHTML = `<div class="flex items-center gap-x-4 gap-y-1 flex-wrap"><p id="imageName" class="font-semibold truncate">N/A</p><p id="imageDimensions" style="color: var(--md-sys-color-on-surface-variant);"></p><p id="imageSize" style="color: var(--md-sys-color-on-surface-variant);"></p></div><div class="flex items-center gap-4"><p id="notificationMessage" class="transition-colors duration-300"></p><p id="zoomLevel" style="color: var(--md-sys-color-on-surface-variant);">Zoom: 100%</p></div>`;
-    Object.assign(ui, { imageName: document.getElementById('imageName'), imageDimensions: document.getElementById('imageDimensions'), imageSize: document.getElementById('imageSize'), notificationMessage: document.getElementById('notificationMessage'), zoomLevel: document.getElementById('zoomLevel')});
+
+    // Re-assign footer elements after innerHTML overwrite
+    Object.assign(ui, {
+        imageName: document.getElementById('imageName'),
+        imageDimensions: document.getElementById('imageDimensions'),
+        imageSize: document.getElementById('imageSize'),
+        notificationMessage: document.getElementById('notificationMessage'),
+        zoomLevel: document.getElementById('zoomLevel')
+    });
+
+    ui.btnShortcutSettings.addEventListener('click', () => {
+        populateShortcutModal();
+        ui.shortcutModal.classList.remove('hidden');
+    });
+    ui.btnModalClose.addEventListener('click', () => {
+        ui.shortcutModal.classList.add('hidden');
+    });
+    ui.btnSaveShortcuts.addEventListener('click', () => {
+        shortcutManager.saveShortcuts(tempShortcutConfig);
+        ui.shortcutModal.classList.add('hidden');
+        showNotification('단축키 설정이 저장되었습니다.', 'success', ui);
+    });
+    ui.btnResetShortcuts.addEventListener('click', () => {
+        shortcutManager.resetShortcuts();
+        populateShortcutModal();
+        showNotification('단축키가 기본값으로 초기화되었습니다.', 'info', ui);
+    });
 
     updateHelpUI();
+}
+
+function populateShortcutModal() {
+    const shortcuts = shortcutManager.getShortcuts();
+    tempShortcutConfig = JSON.parse(JSON.stringify(shortcuts)); // Create a deep copy for editing
+    const descriptions = shortcutManager.actionDescriptions;
+
+    ui.shortcutList.innerHTML = '';
+
+    for (const action in descriptions) {
+        const desc = descriptions[action];
+        const assignedKeys = tempShortcutConfig[action] || [];
+
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2 rounded-lg';
+
+        const label = document.createElement('span');
+        label.className = 'text-sm';
+        label.textContent = desc;
+
+        const keysWrapper = document.createElement('div');
+        keysWrapper.className = 'flex items-center gap-2';
+
+        // For now, we only support editing the first key.
+        // A more complex UI would be needed for multi-key assignment.
+        const keyInput = document.createElement('input');
+        keyInput.type = 'text';
+        keyInput.value = assignedKeys[0] || 'N/A';
+        keyInput.className = 'shortcut-input w-24 text-center';
+        keyInput.readOnly = true;
+
+        keyInput.addEventListener('click', () => {
+            keyInput.value = '입력 대기...';
+            keyInput.focus();
+        });
+
+        keyInput.addEventListener('keydown', (e) => {
+            e.preventDefault();
+            const newKey = e.key.toLowerCase();
+
+            // TODO: Check for duplicates before assigning
+
+            keyInput.value = newKey;
+            tempShortcutConfig[action] = [newKey]; // Replace current keys with the new one
+            keyInput.blur();
+        });
+
+        keyInput.addEventListener('blur', () => {
+            if (keyInput.value === '입력 대기...') {
+                keyInput.value = assignedKeys[0] || 'N/A';
+            }
+        });
+
+        keysWrapper.appendChild(keyInput);
+        row.appendChild(label);
+        row.appendChild(keysWrapper);
+        ui.shortcutList.appendChild(row);
+    }
 }
 
 export function updateAllUI() {

@@ -4,7 +4,7 @@ import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
 import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
-import { shortcuts, numberShortcuts } from './shortcuts.js';
+import { getKeyToActionMap } from './shortcutManager.js';
 
 function updateCursor() {
     if (state.appState.isPanning) {
@@ -264,8 +264,11 @@ function handleMouseUp(e) {
 
 async function handleKeyDown(e) {
     if (e.repeat || e.target.tagName === 'INPUT') return;
-    if (isModalOpen()) {
-        if (e.key === 'Escape') hideDeleteConfirmModal();
+    if (isModalOpen() || ui.shortcutModal.classList.contains('hidden') === false) {
+        if (e.key === 'Escape') {
+            hideDeleteConfirmModal();
+            ui.shortcutModal.classList.add('hidden');
+        }
         return;
     }
 
@@ -276,26 +279,29 @@ async function handleKeyDown(e) {
     }
     if (e.altKey) return;
 
-    const key = e.key.toLowerCase();
-    let action = null;
+    const keyMap = getKeyToActionMap();
+    const action = keyMap[e.key.toLowerCase()];
 
-    if ((e.ctrlKey || e.metaKey) && key === 's') {
-        action = shortcuts['s_modifier'];
-    } else if ((e.ctrlKey || e.metaKey) && key === 'z') {
-        action = shortcuts['z'];
-    } else if (numberShortcuts[key]) {
-        action = 'SELECT_CLASS';
-    } else {
-        action = shortcuts[key];
-    }
+    if (!action) return;
 
-    if (action) {
-        e.preventDefault();
-        await executeAction(action, key);
-    }
+    const requiresModifier = action === 'UNDO' || action === 'SAVE';
+    const hasModifier = e.ctrlKey || e.metaKey;
+
+    // If action requires modifier, it must be present.
+    // If action does not require modifier, it must be absent.
+    if (requiresModifier !== hasModifier) return;
+
+    e.preventDefault();
+    await executeAction(action);
 }
 
-async function executeAction(action, key) {
+async function executeAction(action) {
+    if (action.startsWith('SELECT_CLASS_')) {
+        const classIndex = parseInt(action.split('_').pop());
+        changeClassWithNumber(classIndex);
+        return;
+    }
+
     switch (action) {
         case 'PREV_IMAGE': await navigateImage(-1); break;
         case 'NEXT_IMAGE': await navigateImage(1); break;
@@ -311,10 +317,6 @@ async function executeAction(action, key) {
             break;
         case 'UNDO': undo(); break;
         case 'SAVE': saveAllAnnotationsToZip(); break;
-        case 'SELECT_CLASS':
-            const classIndex = numberShortcuts[key];
-            changeClassWithNumber(classIndex);
-            break;
     }
 }
 
