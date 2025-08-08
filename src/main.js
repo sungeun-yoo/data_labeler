@@ -1,3 +1,4 @@
+import './shortcutManager.js'; // This will execute the file and load shortcuts
 import { initUI } from './ui.js';
 import { initializeEventListeners } from './events.js';
 import { handleResize } from './canvas.js';
