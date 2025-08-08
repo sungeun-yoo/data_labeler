@@ -150,6 +150,7 @@ export function updateAllUI() {
     updateDetailsPanelUI();
     updateInfoBarUI();
     updateModeIndicatorUI();
+    updateClassSelectorUI();
 }
 
 export function updateClassSelectorUI() {
