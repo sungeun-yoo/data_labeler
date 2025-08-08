@@ -52,3 +52,26 @@ export function getResizeHandleAt(worldPos, bbox, transform) {
     }
     return null;
 }
+
+import { getCustomColor } from './colorManager.js';
+
+// A more distinct color palette (Tableau 10)
+const CLASS_COLORS = [
+    "#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F",
+    "#EDC948", "#B07AA1", "#FF9DA7", "#9C755F", "#BAB0AC"
+];
+
+export function getColorForClass(className, allClassNames = []) {
+    // Prioritize custom color if it exists
+    const customColor = getCustomColor(className);
+    if (customColor) {
+        return customColor;
+    }
+
+    // Fallback to the default palette
+    const index = allClassNames.indexOf(className);
+    if (index === -1) {
+        return '#FFFFFF'; // Should not happen
+    }
+    return CLASS_COLORS[index % CLASS_COLORS.length];
+}

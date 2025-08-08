@@ -48,7 +48,10 @@
             <div class="p-4 border-b space-y-4" style="border-color: var(--md-sys-color-outline-variant);">
                 <div id="class-selector-wrapper" class="hidden">
                     <label for="class-selector" class="block text-sm font-medium mb-1">새 객체 클래스</label>
-                    <select id="class-selector" class="w-full rounded-md p-2" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
+                    <div class="flex items-center gap-2">
+                        <select id="class-selector" class="w-full rounded-md p-2 flex-grow" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
+                        <span id="class-color-indicator" class="w-5 h-5 rounded-full block flex-shrink-0"></span>
+                    </div>
                 </div>
                 <button id="btnAddObject" class="btn btn-filled w-full" disabled>+ 객체 추가 (A)</button>
             </div>

@@ -1,4 +1,5 @@
 import './shortcutManager.js'; // This will execute the file and load shortcuts
+import './colorManager.js'; // This will execute the file and load custom colors
 import { initUI } from './ui.js';
 import { initializeEventListeners } from './events.js';
 import { handleResize } from './canvas.js';
