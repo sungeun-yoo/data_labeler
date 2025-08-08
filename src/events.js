@@ -1,7 +1,7 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleJsonSidebar, switchJsonViewTab } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
-import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification } from './utils.js';
+import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
 import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
 import { getKeyToActionMap } from './shortcutManager.js';
@@ -94,6 +94,20 @@ export function initializeEventListeners() {
             changeObjectClass(e.target.value);
         }
     });
+
+    // JSON Sidebar
+    ui.jsonSidebarToggle.addEventListener('click', toggleJsonSidebar);
+    ui.btnLiveJson.addEventListener('click', () => switchJsonViewTab('live'));
+    ui.btnCocoJson.addEventListener('click', () => switchJsonViewTab('coco'));
+
+    ui.btnCopyLive.addEventListener('click', () => copyToClipboard(ui.liveJsonOutput.textContent, ui));
+    ui.btnDownloadLive.addEventListener('click', () => {
+        const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".json";
+        downloadFile(ui.liveJsonOutput.textContent, filename || 'annotation.json');
+    });
+
+    ui.btnCopyCoco.addEventListener('click', () => copyToClipboard(ui.cocoJsonOutput.textContent, ui));
+    ui.btnDownloadCoco.addEventListener('click', () => downloadFile(ui.cocoJsonOutput.textContent, 'coco_annotations.json'));
 }
 
 function handleMouseDown(e) {

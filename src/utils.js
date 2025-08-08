@@ -75,3 +75,24 @@ export function getColorForClass(className, allClassNames = []) {
     }
     return CLASS_COLORS[index % CLASS_COLORS.length];
 }
+
+export function copyToClipboard(text, ui) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('클립보드에 복사되었습니다.', 'success', ui);
+    }).catch(err => {
+        showNotification('복사에 실패했습니다.', 'error', ui);
+        console.error('클립보드 복사 실패:', err);
+    });
+}
+
+export function downloadFile(content, filename) {
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}

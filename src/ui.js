@@ -3,6 +3,7 @@ import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
 import { setCustomColor } from './colorManager.js';
+import { exportAsCocoFormat, exportAsLiveJson } from './dataExporter.js';
 
 export const ui = {};
 let tempShortcutConfig = {};
@@ -50,8 +51,23 @@ export function initUI() {
         shortcutList: document.getElementById('shortcutList'),
         btnResetShortcuts: document.getElementById('btnResetShortcuts'),
         btnSaveShortcuts: document.getElementById('btnSaveShortcuts'),
+
+        // JSON Sidebar
+        jsonSidebar: document.getElementById('json-sidebar'),
+        jsonSidebarToggle: document.getElementById('json-sidebar-toggle'),
+        btnLiveJson: document.getElementById('btn-live-json'),
+        btnCocoJson: document.getElementById('btn-coco-json'),
+        liveJsonContent: document.getElementById('live-json-content'),
+        cocoJsonContent: document.getElementById('coco-json-content'),
+        liveJsonOutput: document.getElementById('live-json-output'),
+        cocoJsonOutput: document.getElementById('coco-json-output'),
+        btnCopyLive: document.getElementById('btn-copy-live'),
+        btnDownloadLive: document.getElementById('btn-download-live'),
+        btnCopyCoco: document.getElementById('btn-copy-coco'),
+        btnDownloadCoco: document.getElementById('btn-download-coco'),
     });
 
+    ui.jsonSidebarToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>`;
     ui.btnPrev.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnShortcutSettings.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>`;
@@ -84,6 +100,9 @@ export function initUI() {
         populateShortcutModal();
         showNotification('단축키가 기본값으로 초기화되었습니다.', 'info', ui);
     });
+
+    // Set initial state for JSON viewer
+    switchJsonViewTab('live');
     ui.classColorIndicator.addEventListener('click', () => {
         const colorInput = document.createElement('input');
         colorInput.type = 'color';
@@ -182,6 +201,7 @@ export function updateAllUI() {
     updateInfoBarUI();
     updateModeIndicatorUI();
     updateClassSelectorUI();
+    updateJsonView();
 }
 
 export function updateClassSelectorUI() {
@@ -320,6 +340,37 @@ export function updateDetailsPanelUI() {
     updateBboxInfoUI(obj);
     updateKeypointListUI(obj);
 }
+
+export function toggleJsonSidebar() {
+    ui.jsonSidebar.classList.toggle('active');
+    ui.jsonSidebarToggle.classList.toggle('active');
+}
+
+export function switchJsonViewTab(tab) {
+    if (tab === 'live') {
+        ui.liveJsonContent.classList.remove('hidden');
+        ui.cocoJsonContent.classList.add('hidden');
+        ui.btnLiveJson.classList.add('active');
+        ui.btnCocoJson.classList.remove('active');
+    } else {
+        ui.liveJsonContent.classList.add('hidden');
+        ui.cocoJsonContent.classList.remove('hidden');
+        ui.btnLiveJson.classList.remove('active');
+        ui.btnCocoJson.classList.add('active');
+    }
+}
+
+export function updateJsonView() {
+    if (state.currentImageIndex < 0) {
+        ui.liveJsonOutput.textContent = '{}';
+        ui.cocoJsonOutput.textContent = '{}';
+        return;
+    }
+
+    ui.liveJsonOutput.textContent = exportAsLiveJson();
+    ui.cocoJsonOutput.textContent = exportAsCocoFormat();
+}
+
 
 function updateClassInfoUI(obj) {
     const classInfoEl = document.getElementById('class-info');
