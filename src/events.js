@@ -113,7 +113,7 @@ export function initializeEventListeners() {
 
     // Left Sidebar
     ui.labelSidebarToggle.addEventListener('click', () => switchSidebar('label'));
-    ui.imageListSidebarToggle.addEventListener('click', () => switchSidebar('image'));
+    ui.imageSidebarToggle.addEventListener('click', () => switchSidebar('image'));
 
     // Resizer
     ui.leftSidebarResizer.addEventListener('mousedown', (e) => {
@@ -127,7 +127,7 @@ export function initializeEventListeners() {
         if (newWidth > 200 && newWidth < 800) { // Min/max width
             const sidebarWidth = `${newWidth}px`;
             ui.labelSidebar.style.setProperty('--sidebar-width', sidebarWidth);
-            ui.imageListSidebar.style.setProperty('--sidebar-width', sidebarWidth);
+            ui.imageSidebar.style.setProperty('--sidebar-width', sidebarWidth);
             ui.leftSidebarContainer.style.setProperty('--sidebar-width', sidebarWidth);
         }
     }
