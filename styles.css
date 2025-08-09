@@ -222,6 +222,25 @@ input[type=number] { -moz-appearance: textfield; }
     justify-content: center;
 }
 
+.image-list-item .icon-view-status {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: rgba(0,0,0,0.6);
+    padding: 2px 4px;
+    border-radius: 6px;
+    color: white;
+    font-size: 11px;
+    pointer-events: none; /* So it doesn't interfere with clicks on the item */
+}
+.image-list-item .icon-view-status .status-icon {
+    width: 14px;
+    height: 14px;
+}
+
 #label-sidebar-toggle.active, #image-list-sidebar-toggle.active {
     background-color: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
@@ -257,6 +276,17 @@ input[type=number] { -moz-appearance: textfield; }
     right: -4px; /* Center the handle */
     background-color: transparent;
     z-index: 41;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: background-color 0.2s;
+}
+
+#left-sidebar-resizer:hover {
+    background-color: var(--md-sys-color-outline-variant);
+}
+
+#left-sidebar-container.toggled #left-sidebar-resizer {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bM/5+hQ4g5w5vN7Ww2E8MZFwBigAkAAD1sYkGPEpC9AAAAAElFTkSuQmCC');
 }
 
 #label-content-wrapper, #image-list-content-wrapper {
