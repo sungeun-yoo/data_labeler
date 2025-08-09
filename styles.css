@@ -385,6 +385,7 @@ input[type=number] { -moz-appearance: textfield; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-grow: 1;
 }
 
 .image-list-item.list-view-item {
@@ -427,9 +428,9 @@ input[type=number] { -moz-appearance: textfield; }
     display: inline-block;
 }
 .list-view-item .status .status-icon.completed {
-    background-color: #4CAF50; /* Green */
+    background-color: white;
     border-radius: 50%;
-    color: white;
+    color: #4CAF50; /* Green */
     display: inline-flex;
     align-items: center;
     justify-content: center;
