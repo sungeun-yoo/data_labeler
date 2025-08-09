@@ -51,6 +51,22 @@ export async function handleConfigFile(e) {
     }
 }
 
+export async function jumpToImage(index) {
+    if (index < 0 || index >= state.imageFiles.length) return;
+    if (index === state.currentImageIndex) return;
+
+    ui.canvasLoader.style.display = 'flex';
+    try {
+        state.setCurrentImageIndex(index);
+        state.resetAppState();
+        await loadAndDrawImage(index);
+    } catch (error) {
+        showNotification(error.message, 'error', ui);
+    } finally {
+        ui.canvasLoader.style.display = 'none';
+    }
+}
+
 export async function handleDirectorySelection(e) {
     showNotification('이미지 폴더를 읽는 중...', 'info', ui);
     ui.canvasLoader.style.display = 'flex';

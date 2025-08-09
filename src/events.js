@@ -1,8 +1,8 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleLabelSidebar, switchLabelViewTab } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleLabelSidebar, toggleImageListSidebar, switchLabelViewTab, setImageListViewMode, updateThumbnailSizes } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
-import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
+import { navigateImage, jumpToImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
 import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
 import { getKeyToActionMap } from './shortcutManager.js';
 
@@ -111,8 +111,11 @@ export function initializeEventListeners() {
         }
     });
 
-    // Label Sidebar
+    // Sidebars
     ui.labelSidebarToggle.addEventListener('click', toggleLabelSidebar);
+    ui.imageListSidebarToggle.addEventListener('click', toggleImageListSidebar);
+
+    // Label Viewer
     ui.btnLiveJson.addEventListener('click', () => switchLabelViewTab('live'));
     ui.btnCocoJson.addEventListener('click', () => switchLabelViewTab('coco'));
     ui.btnYoloPose.addEventListener('click', () => switchLabelViewTab('yolo'));
@@ -130,6 +133,19 @@ export function initializeEventListeners() {
     ui.btnDownloadYolo.addEventListener('click', () => {
         const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".txt";
         downloadFile(ui.yoloPoseOutput.textContent, filename || 'annotation.txt');
+    });
+
+    // Image List Sidebar
+    ui.btnViewModeList.addEventListener('click', () => setImageListViewMode('list'));
+    ui.btnViewModeGrid.addEventListener('click', () => setImageListViewMode('grid'));
+    ui.thumbnailSizeSlider.addEventListener('input', updateThumbnailSizes);
+
+    ui.imageListContent.addEventListener('click', (e) => {
+        const item = e.target.closest('.image-list-item');
+        if (item && item.dataset.index) {
+            const index = parseInt(item.dataset.index, 10);
+            jumpToImage(index);
+        }
     });
 }
 

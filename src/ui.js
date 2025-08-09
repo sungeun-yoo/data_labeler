@@ -52,6 +52,9 @@ export function initUI() {
         btnResetShortcuts: document.getElementById('btnResetShortcuts'),
         btnSaveShortcuts: document.getElementById('btnSaveShortcuts'),
 
+        // Left Panel
+        leftPanel: document.getElementById('left-panel'),
+
         // Label Sidebar
         labelSidebar: document.getElementById('label-sidebar'),
         labelSidebarToggle: document.getElementById('label-sidebar-toggle'),
@@ -70,9 +73,20 @@ export function initUI() {
         btnDownloadCoco: document.getElementById('btn-download-coco'),
         btnCopyYolo: document.getElementById('btn-copy-yolo'),
         btnDownloadYolo: document.getElementById('btn-download-yolo'),
+
+        // Image List Sidebar
+        imageListSidebar: document.getElementById('image-list-sidebar'),
+        imageListSidebarToggle: document.getElementById('image-list-sidebar-toggle'),
+        btnViewModeList: document.getElementById('btn-view-mode-list'),
+        btnViewModeGrid: document.getElementById('btn-view-mode-grid'),
+        thumbnailSizeSlider: document.getElementById('thumbnail-size-slider'),
+        imageListContent: document.getElementById('image-list-content'),
     });
 
     ui.labelSidebarToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>`;
+    ui.imageListSidebarToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>`;
+    ui.btnViewModeList.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>`;
+    ui.btnViewModeGrid.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 8.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 018.25 20.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6A2.25 2.25 0 0115.75 3.75h2.25A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75A2.25 2.25 0 0115.75 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>`;
 
     const copyIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>`;
     const downloadIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>`;
@@ -150,6 +164,7 @@ export function initUI() {
     });
 
     updateHelpUI();
+    setImageListViewMode('grid');
 }
 
 function populateShortcutModal() {
@@ -213,6 +228,7 @@ function populateShortcutModal() {
 export function updateAllUI() {
     updateHelpUI();
     updateObjectListUI();
+    updateImageListUI();
     updateDetailsPanelUI();
     updateInfoBarUI();
     updateModeIndicatorUI();
@@ -367,9 +383,35 @@ export function updateDetailsPanelUI() {
     updateKeypointListUI(obj);
 }
 
+let isLabelSidebarOpen = false;
+let isImageListSidebarOpen = false;
+
+function updateSidebarsVisibility() {
+    ui.labelSidebar.classList.toggle('hidden', !isLabelSidebarOpen);
+    ui.imageListSidebar.classList.toggle('hidden', !isImageListSidebarOpen);
+    ui.labelSidebarToggle.classList.toggle('active', isLabelSidebarOpen);
+    ui.imageListSidebarToggle.classList.toggle('active', isImageListSidebarOpen);
+
+    const isAnySidebarOpen = isLabelSidebarOpen || isImageListSidebarOpen;
+    ui.leftPanel.classList.toggle('hidden', !isAnySidebarOpen);
+
+    // Adjust the split sizes
+    const sizes = window.appSplits.mainSplit.getSizes();
+    if (isAnySidebarOpen && sizes[0] < 5) {
+        window.appSplits.mainSplit.setSizes([20, 55, 25]);
+    } else if (!isAnySidebarOpen) {
+        window.appSplits.mainSplit.setSizes([0, 75, 25]);
+    }
+}
+
 export function toggleLabelSidebar() {
-    ui.labelSidebar.classList.toggle('active');
-    ui.labelSidebarToggle.classList.toggle('active');
+    isLabelSidebarOpen = !isLabelSidebarOpen;
+    updateSidebarsVisibility();
+}
+
+export function toggleImageListSidebar() {
+    isImageListSidebarOpen = !isImageListSidebarOpen;
+    updateSidebarsVisibility();
 }
 
 export function switchLabelViewTab(tab) {
@@ -575,4 +617,94 @@ export function updateInfoBarUI() {
 
     if (state.currentImage) ui.imageDimensions.textContent = `${state.currentImage.naturalWidth} x ${state.currentImage.naturalHeight}`;
     ui.imageSize.textContent = formatBytes(file.size);
+}
+
+export function updateImageListUI() {
+    ui.imageListContent.innerHTML = '';
+    if (!state.imageFiles || state.imageFiles.length === 0) return;
+
+    const fragment = document.createDocumentFragment();
+    const thumbSize = ui.thumbnailSizeSlider.value;
+    const isListView = ui.imageListContent.classList.contains('list-view');
+
+    state.imageFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'image-list-item';
+        item.dataset.index = index;
+
+        if (index === state.currentImageIndex) {
+            item.classList.add('selected');
+        }
+
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
+
+        const filenameSpan = document.createElement('span');
+        filenameSpan.className = 'filename';
+        filenameSpan.textContent = file.name;
+
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'label-status flex items-center gap-1 text-xs text-gray-400';
+        const objectCount = state.annotationData[file.name]?.objects?.length || 0;
+        const hasAnnotations = objectCount > 0;
+
+        statusDiv.innerHTML = `
+            <svg class="w-4 h-4 ${hasAnnotations ? 'text-green-400' : 'text-gray-600'}" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <span>${objectCount} obj</span>
+        `;
+
+        item.appendChild(img);
+
+        if (isListView) {
+            img.style.width = `50px`;
+            img.style.height = `50px`;
+            const infoWrapper = document.createElement('div');
+            infoWrapper.className = 'flex-grow';
+            infoWrapper.appendChild(filenameSpan);
+            infoWrapper.appendChild(statusDiv);
+            item.appendChild(infoWrapper);
+        } else { // Grid view
+            img.style.width = `${thumbSize}px`;
+            img.style.height = `${thumbSize}px`;
+            item.appendChild(filenameSpan);
+        }
+
+        fragment.appendChild(item);
+    });
+
+    ui.imageListContent.appendChild(fragment);
+
+    const selectedEl = ui.imageListContent.querySelector('.selected');
+    if (selectedEl) {
+        selectedEl.scrollIntoView({ block: 'nearest' });
+    }
+}
+
+export function setImageListViewMode(mode) {
+    if (mode === 'list') {
+        ui.imageListContent.classList.remove('grid-view');
+        ui.imageListContent.classList.add('list-view');
+        ui.btnViewModeList.classList.add('active');
+        ui.btnViewModeGrid.classList.remove('active');
+    } else { // grid
+        ui.imageListContent.classList.remove('list-view');
+        ui.imageListContent.classList.add('grid-view');
+        ui.btnViewModeGrid.classList.add('active');
+        ui.btnViewModeList.classList.remove('active');
+    }
+    updateImageListUI(); // Redraw the list with the new layout
+}
+
+export function updateThumbnailSizes() {
+    const thumbSize = ui.thumbnailSizeSlider.value;
+    const images = ui.imageListContent.querySelectorAll('.image-list-item img');
+    images.forEach(img => {
+        if (ui.imageListContent.classList.contains('grid-view')) {
+            img.style.width = `${thumbSize}px`;
+            img.style.height = `${thumbSize}px`;
+        }
+    });
 }

@@ -123,6 +123,67 @@ body {
     border-radius: 4px;
 }
 
+/* Image List Sidebar */
+#image-list-content {
+    display: flex;
+    gap: 8px;
+}
+#image-list-content.grid-view {
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+#image-list-content.list-view {
+    flex-direction: column;
+}
+
+.image-list-item {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.image-list-item:hover {
+    border-color: var(--md-sys-color-outline);
+}
+.image-list-item.selected {
+    border-color: var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+.list-view .image-list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.list-view .image-list-item img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.grid-view .image-list-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.grid-view .image-list-item .filename {
+    font-size: 0.75rem;
+    text-align: center;
+    word-break: break-all;
+    margin-top: 4px;
+}
+
+#image-list-sidebar .btn-tonal.active {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+
+#thumbnail-size-slider {
+    accent-color: var(--md-sys-color-primary);
+}
+
 .gutter {
     background-color: var(--md-sys-color-outline-variant);
     background-repeat: no-repeat;
@@ -184,42 +245,29 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Label Viewer Sidebar */
 #label-sidebar-toggle {
-    position: fixed;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 32px;
-    height: 100px;
-    border-radius: 0 16px 16px 0;
-    padding: 0;
-    background-color: var(--md-sys-color-surface-container-high);
-    color: var(--md-sys-color-on-surface-variant);
-    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 40;
+    /* The button is now in the header, so fixed positioning is not needed */
 }
 
-#label-sidebar-toggle.active {
-    left: 400px; /* sidebar width */
+#label-sidebar-toggle.active, #image-list-sidebar-toggle.active {
+    background-color: var(--md-sys-color-primary-container);
+}
+
+#left-panel {
+    /* This will be a flex column for the two sidebars */
+}
+
+/* Remove fixed positioning from sidebars */
+#label-sidebar, #image-list-sidebar {
+    background-color: var(--md-sys-color-surface-container);
+    /* No more fixed positioning, transform, or z-index */
+    flex-shrink: 0; /* Prevent sidebars from shrinking in the flex container */
 }
 
 #label-sidebar {
-    position: fixed;
-    top: 57px; /* Header height */
-    bottom: 37px; /* Footer height */
-    left: 0;
-    width: 400px;
-    background-color: var(--md-sys-color-surface-container);
-    display: flex;
-    flex-direction: column;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 39;
-    border-radius: 0 16px 16px 0;
+    height: 50%; /* Initial height, will be resizable */
 }
-
-#label-sidebar.active {
-    transform: translateX(0);
+#image-list-sidebar {
+    height: 50%; /* Initial height, will be resizable */
 }
 
 #label-content-wrapper {
