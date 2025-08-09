@@ -45,6 +45,9 @@ export function redrawCanvas() {
         if (obj.keypoints) {
             drawSkeleton(obj, color, isSelected);
             drawKeypoints(obj, color, isSelected);
+            if (isSelected && state.appState.selectedPointIndex === -1 && state.transform.scale > 0.5) {
+                drawKeypointLabels(obj, color);
+            }
         }
     });
 
@@ -65,6 +68,25 @@ function drawBbox(obj, color, isSelected, isDrawing = false) {
     if (isDrawing) ctx.setLineDash([5, 5]);
     ctx.strokeRect(Math.min(x1,x2), Math.min(y1,y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
     ctx.setLineDash([]);
+}
+
+function drawKeypointLabels(obj, color) {
+    const labels = state.config[obj.className].labels;
+    const points = obj.keypoints;
+    const ctx = ui.ctx;
+
+    const fontSize = 12 / state.transform.scale;
+    ctx.font = `${fontSize}px Inter`;
+    ctx.fillStyle = color;
+
+    points.forEach((point, index) => {
+        if (point.visible > 0) {
+            const label = labels[index];
+            const x = point.x + 8 / state.transform.scale;
+            const y = point.y + 4 / state.transform.scale;
+            ctx.fillText(label, x, y);
+        }
+    });
 }
 
 function drawKeypoints(obj, color, isSelected) {
