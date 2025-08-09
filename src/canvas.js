@@ -74,19 +74,30 @@ function drawKeypointLabels(obj, color) {
     const labels = state.config[obj.className].labels;
     const points = obj.keypoints;
     const ctx = ui.ctx;
+    ctx.save();
 
     const fontSize = 12 / state.transform.scale;
-    ctx.font = `${fontSize}px Inter`;
-    ctx.fillStyle = color;
+    ctx.font = `bold ${fontSize}px Inter`;
+    const padding = 3 / state.transform.scale;
 
     points.forEach((point, index) => {
         if (point.visible > 0) {
             const label = labels[index];
+            const textMetrics = ctx.measureText(label);
+            const textWidth = textMetrics.width;
+            const textHeight = fontSize;
+
             const x = point.x + 8 / state.transform.scale;
-            const y = point.y + 4 / state.transform.scale;
-            ctx.fillText(label, x, y);
+            const y = point.y - textHeight / 2;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(x - padding, y - padding, textWidth + padding * 2, textHeight + padding * 2);
+
+            ctx.fillStyle = 'white';
+            ctx.fillText(label, x, y + textHeight / 2);
         }
     });
+    ctx.restore();
 }
 
 function drawKeypoints(obj, color, isSelected) {
