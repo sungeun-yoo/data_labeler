@@ -394,28 +394,23 @@ export function toggleSidebar(sidebarName) {
 function openSidebar(sidebarName) {
     state.appState.activeSidebar = sidebarName;
 
-    // Hide/show main container
+    const container = ui.sidebarContainer;
+    const toggles = ui.sidebarToggles;
+
     if (sidebarName === null) {
-        ui.sidebarContainer.classList.add('hidden');
+        container.classList.add('hidden');
+        toggles.style.transform = 'translateX(0px)';
     } else {
-        ui.sidebarContainer.classList.remove('hidden');
+        container.classList.remove('hidden');
+        const containerWidth = container.offsetWidth;
+        toggles.style.transform = `translateX(${containerWidth}px)`;
     }
 
-    // Show the correct sidebar
     ui.labelSidebar.classList.toggle('hidden', sidebarName !== 'label');
     ui.imageListSidebar.classList.toggle('hidden', sidebarName !== 'image-list');
 
-    // Update toggle buttons state
     ui.labelSidebarToggle.classList.toggle('active', sidebarName === 'label');
     ui.imageListSidebarToggle.classList.toggle('active', sidebarName === 'image-list');
-
-    // Move toggles to be flush with the opened sidebar
-    const containerWidth = ui.sidebarContainer.offsetWidth;
-    if (sidebarName !== null) {
-        ui.sidebarToggles.style.transform = `translateX(${containerWidth}px)`;
-    } else {
-        ui.sidebarToggles.style.transform = 'translateX(0px)';
-    }
 }
 
 export function initializeSidebarResizing() {
@@ -429,7 +424,7 @@ export function initializeSidebarResizing() {
     window.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
         const newWidth = e.clientX;
-        if (newWidth > 250 && newWidth < 800) { // Min/max width
+        if (newWidth > 250 && newWidth < 800) {
             ui.sidebarContainer.style.width = `${newWidth}px`;
             ui.sidebarToggles.style.transform = `translateX(${newWidth}px)`;
         }
@@ -680,12 +675,11 @@ export function updateImageListUI() {
         const objectCount = state.annotationData[file.name]?.objects?.length || 0;
         const hasAnnotations = objectCount > 0;
 
-        statusDiv.innerHTML = `
-            <svg class="w-4 h-4 ${hasAnnotations ? 'text-green-400' : 'text-gray-600'}" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-            </svg>
-            <span>${objectCount} obj</span>
-        `;
+        const statusIcon = hasAnnotations
+            ? `<svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>`
+            : `<svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>`;
+
+        statusDiv.innerHTML = `${statusIcon} <span>${objectCount} obj</span>`;
 
         item.appendChild(img);
 
@@ -701,7 +695,7 @@ export function updateImageListUI() {
             img.style.width = `${thumbSize}px`;
             img.style.height = `${thumbSize}px`;
             item.appendChild(filenameSpan);
-            item.appendChild(statusDiv); // Add status to grid view as well
+            item.appendChild(statusDiv);
         }
 
         fragment.appendChild(item);
@@ -716,6 +710,7 @@ export function updateImageListUI() {
 }
 
 export function setImageListViewMode(mode) {
+    if (!ui.imageListContent) return;
     if (mode === 'list') {
         ui.imageListContent.classList.remove('grid-view');
         ui.imageListContent.classList.add('list-view');
@@ -731,6 +726,7 @@ export function setImageListViewMode(mode) {
 }
 
 export function updateThumbnailSizes() {
+    if (!ui.imageListContent) return;
     const thumbSize = ui.thumbnailSizeSlider.value;
     const images = ui.imageListContent.querySelectorAll('.image-list-item img');
     images.forEach(img => {
