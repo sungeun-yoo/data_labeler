@@ -433,16 +433,19 @@ export function updateImageListUI() {
     const wrapper = ui.imageListContentWrapper;
     const items = wrapper.children;
 
+    const wrapper = ui.imageListContentWrapper;
+    const items = wrapper.children;
+    const isListView = wrapper.classList.contains('list-view');
+
     // If DOM items don't match data, or if view mode has changed, rebuild everything
     if (items.length !== state.imageFiles.length ||
-        (items.length > 0 && wrapper.classList.contains('list-view') !== items[0].classList.contains('list-view-item'))) {
+        (items.length > 0 && items[0].classList.contains('list-view-item') !== isListView)) {
 
         wrapper.innerHTML = ''; // Clear previous items
         if (state.imageFiles.length === 0) {
             wrapper.innerHTML = `<p class="text-gray-500 text-center col-span-full">이미지가 없습니다.</p>`;
             return;
         }
-        const isListView = wrapper.classList.contains('list-view');
 
         state.imageFiles.forEach((file, index) => {
             const item = document.createElement('div');
@@ -457,12 +460,17 @@ export function updateImageListUI() {
             }
             const img = document.createElement('img');
             img.src = imageUrl;
+            item.appendChild(img);
 
-            item.appendChild(img); // Append the image first
-
-            const infoWrapper = document.createElement('div');
-            item.appendChild(infoWrapper); // Then the rest of the info
-
+            // Create the correct container for info
+            const infoContainer = document.createElement('div');
+            if (!isListView) {
+                // For icon view, we need two containers
+                infoContainer.className = 'icon-view-status-container'; // A wrapper for both status and info
+            } else {
+                infoContainer.className = 'info';
+            }
+            item.appendChild(infoContainer);
             wrapper.appendChild(item);
         });
     }
@@ -478,28 +486,28 @@ export function updateImageListUI() {
         item.classList.toggle('selected', index === state.currentImageIndex);
 
         // Update content (only if it needs to be changed)
-        const isListView = wrapper.classList.contains('list-view');
-        let currentContent;
+        let newContent;
+        const infoContainer = item.querySelector('.info, .icon-view-status-container');
+
 
         if (isListView) {
             const statusIconHTML = isCompleted
                 ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
                 : '<span class="status-icon"></span>';
 
-            currentContent = `<div class="info"><span class="filename" title="${file.name}">${file.name}</span><span class="status">${statusIconHTML}<span>obj ${objectCount}</span></span></div>`;
+            newContent = `<span class="filename" title="${file.name}">${file.name}</span><span class="status">${statusIconHTML}<span>obj ${objectCount}</span></span>`;
         } else {
              const statusIconHTML = isCompleted
                 ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
                 : '';
             const objCountText = objectCount > 0 ? `<span class="obj-count">obj ${objectCount}</span>` : '';
             const statusHTML = `<div class="icon-view-status">${statusIconHTML}${objCountText}</div>`;
-            currentContent = `${statusHTML}<div class="info">${file.name}</div>`;
+            newContent = `${statusHTML}<div class="info">${file.name}</div>`;
         }
 
         // Only update innerHTML if it has actually changed to prevent flicker
-        const infoWrapper = item.querySelector('div'); // The first div is the info wrapper
-        if (infoWrapper.innerHTML !== currentContent) {
-            infoWrapper.innerHTML = currentContent;
+        if (infoContainer && infoContainer.innerHTML !== newContent) {
+            infoContainer.innerHTML = newContent;
         }
     });
 

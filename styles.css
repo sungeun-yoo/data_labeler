@@ -425,15 +425,22 @@ input[type=number] { -moz-appearance: textfield; }
 .list-view-item .status .status-icon {
     width: 18px;
     height: 18px;
-    display: inline-block;
-}
-.list-view-item .status .status-icon.completed {
-    background-color: white;
-    border-radius: 50%;
-    color: #4CAF50; /* Green */
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+/* List View: Green circle, white check */
+.list-view-item .status .status-icon.completed {
+    background-color: #4CAF50; /* Green */
+    border-radius: 50%;
+    color: white;
+}
+
+/* Icon View: Transparent background, green check */
+.icon-view-status .status-icon.completed {
+    background-color: transparent;
+    color: #4CAF50; /* Green */
 }
 
 /* Slider style */
