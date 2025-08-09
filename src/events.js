@@ -239,6 +239,7 @@ function handleMouseMove(e) {
     const worldPos = screenToWorld(pos.x, pos.y, state.transform);
     state.appState.lastMouseWorldPos = worldPos;
 
+    updateInfoBarUI();
     updateCursor();
 
     if (state.appState.isPanning) {
@@ -250,11 +251,18 @@ function handleMouseMove(e) {
     } else if (state.appState.isResizingBbox) {
         const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
         const bbox = obj.bbox;
+        const imgWidth = state.currentImage.width;
+        const imgHeight = state.currentImage.height;
+
+        // Clamp worldPos to image boundaries
+        const clampedX = Math.max(0, Math.min(worldPos.x, imgWidth));
+        const clampedY = Math.max(0, Math.min(worldPos.y, imgHeight));
+
         switch (state.appState.resizeHandle) {
-            case 'tl': bbox[0] = worldPos.x; bbox[1] = worldPos.y; break;
-            case 'tr': bbox[2] = worldPos.x; bbox[1] = worldPos.y; break;
-            case 'bl': bbox[0] = worldPos.x; bbox[3] = worldPos.y; break;
-            case 'br': bbox[2] = worldPos.x; bbox[3] = worldPos.y; break;
+            case 'tl': bbox[0] = clampedX; bbox[1] = clampedY; break;
+            case 'tr': bbox[2] = clampedX; bbox[1] = clampedY; break;
+            case 'bl': bbox[0] = clampedX; bbox[3] = clampedY; break;
+            case 'br': bbox[2] = clampedX; bbox[3] = clampedY; break;
         }
         updateBboxInfoUI(obj);
     } else if (state.appState.mode === 'DRAWING_BBOX' && state.appState.drawingBboxStartPoint) {
@@ -287,11 +295,14 @@ function handleMouseUp(e) {
             updateAllUI();
             redrawCanvas();
         } else {
+            const imgWidth = state.currentImage.width;
+            const imgHeight = state.currentImage.height;
+
             const normalizedBbox = [
-                Math.min(x1, x2),
-                Math.min(y1, y2),
-                Math.max(x1, x2),
-                Math.max(y1, y2)
+                Math.max(0, Math.min(x1, x2)),
+                Math.max(0, Math.min(y1, y2)),
+                Math.min(imgWidth, Math.max(x1, x2)),
+                Math.min(imgHeight, Math.max(y1, y2))
             ];
 
             let newObjectIndex = -1;

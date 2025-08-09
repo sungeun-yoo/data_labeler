@@ -88,7 +88,7 @@ export function initUI() {
     ui.btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnShortcutSettings.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>`;
     ui.canvasLoader.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p>이미지 로딩 중...</p>`;
-    document.querySelector('footer').innerHTML = `<div class="flex items-center gap-x-4 gap-y-1 flex-wrap"><p id="imageName" class="font-semibold truncate">N/A</p><p id="imageDimensions" style="color: var(--md-sys-color-on-surface-variant);"></p><p id="imageSize" style="color: var(--md-sys-color-on-surface-variant);"></p></div><div class="flex items-center gap-4"><p id="notificationMessage" class="transition-colors duration-300"></p><p id="zoomLevel" style="color: var(--md-sys-color-on-surface-variant);">Zoom: 100%</p></div>`;
+    document.querySelector('footer').innerHTML = `<div class="flex items-center gap-x-4 gap-y-1 flex-wrap"><p id="imageName" class="font-semibold truncate">N/A</p><p id="imageDimensions" style="color: var(--md-sys-color-on-surface-variant);"></p><p id="imageSize" style="color: var(--md-sys-color-on-surface-variant);"></p></div><div class="flex items-center gap-4"><p id="mouseCoords" style="color: var(--md-sys-color-on-surface-variant);"></p><p id="notificationMessage" class="transition-colors duration-300"></p><p id="zoomLevel" style="color: var(--md-sys-color-on-surface-variant);">Zoom: 100%</p></div>`;
 
     // Re-assign footer elements after innerHTML overwrite
     Object.assign(ui, {
@@ -96,7 +96,8 @@ export function initUI() {
         imageDimensions: document.getElementById('imageDimensions'),
         imageSize: document.getElementById('imageSize'),
         notificationMessage: document.getElementById('notificationMessage'),
-        zoomLevel: document.getElementById('zoomLevel')
+        zoomLevel: document.getElementById('zoomLevel'),
+        mouseCoords: document.getElementById('mouseCoords')
     });
 
     ui.btnShortcutSettings.addEventListener('click', () => {
@@ -565,6 +566,7 @@ export function updateInfoBarUI() {
         ui.imageName.textContent = 'N/A';
         ui.imageDimensions.textContent = '';
         ui.imageSize.textContent = '';
+        ui.mouseCoords.textContent = '';
         return;
     };
     const file = state.imageFiles[state.currentImageIndex];
@@ -575,4 +577,10 @@ export function updateInfoBarUI() {
 
     if (state.currentImage) ui.imageDimensions.textContent = `${state.currentImage.naturalWidth} x ${state.currentImage.naturalHeight}`;
     ui.imageSize.textContent = formatBytes(file.size);
+
+    if (state.appState.lastMouseWorldPos) {
+        ui.mouseCoords.textContent = `X: ${state.appState.lastMouseWorldPos.x.toFixed(1)}, Y: ${state.appState.lastMouseWorldPos.y.toFixed(1)}`;
+    } else {
+        ui.mouseCoords.textContent = '';
+    }
 }
