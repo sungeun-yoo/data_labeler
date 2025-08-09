@@ -432,9 +432,6 @@ export function switchSidebar(sidebarName) {
 export function updateImageListUI() {
     const wrapper = ui.imageListContentWrapper;
     const items = wrapper.children;
-
-    const wrapper = ui.imageListContentWrapper;
-    const items = wrapper.children;
     const isListView = wrapper.classList.contains('list-view');
 
     // If DOM items don't match data, or if view mode has changed, rebuild everything
