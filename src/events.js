@@ -187,7 +187,7 @@ function handleMouseDown(e) {
             if (pointToUpdate) {
                 pointToUpdate.x = worldPos.x;
                 pointToUpdate.y = worldPos.y;
-                pointToUpdate.visible = 2;
+                pointToUpdate.visible = state.appState.isCtrlDown ? 1 : 2;
             }
             const labels = state.config[selectedObject.className].labels;
             const nextPointIndex = (state.appState.selectedPointIndex + 1) % labels.length;
@@ -367,6 +367,11 @@ async function handleKeyDown(e) {
         updateCursor();
         return;
     }
+    if (e.key === 'Control') {
+        state.appState.isCtrlDown = true;
+        redrawCanvas();
+        return;
+    }
     if (e.altKey) return;
 
     const keyMap = getKeyToActionMap();
@@ -450,6 +455,10 @@ function handleKeyUp(e) {
     if (e.key === 'Alt') {
         state.appState.isAltDown = false;
         updateCursor();
+    }
+    if (e.key === 'Control') {
+        state.appState.isCtrlDown = false;
+        redrawCanvas();
     }
 }
 

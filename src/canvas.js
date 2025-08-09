@@ -155,8 +155,11 @@ function drawCursorLabel(pos) {
     if (!obj || !obj.className || !state.config[obj.className]) return;
 
     const labels = state.config[obj.className].labels;
-    const label = labels[state.appState.selectedPointIndex];
+    let label = labels[state.appState.selectedPointIndex];
     if (!label) return;
+
+    const visibility = state.appState.isCtrlDown ? 1 : 2;
+    label = `${label} : ${visibility}`;
 
     const ctx = ui.ctx;
     ctx.save();
