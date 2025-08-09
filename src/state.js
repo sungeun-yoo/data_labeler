@@ -22,6 +22,7 @@ export const appState = {
     draggingPointInfo: { objIndex: -1, ptIndex: -1 },
     lastMouseWorldPos: null,
     isAltDown: false,
+    isCtrlDown: false,
     currentClass: null,
 };
 
