@@ -9,6 +9,7 @@ export let history = [];
 export let currentHistoryIndex = -1;
 
 export const appState = {
+    activeSidebar: null, // 'label', 'image-list', or null
     mode: 'IDLE', // IDLE, DRAWING_BBOX, EDITING_POSE
     selectedObjectIndex: -1,
     selectedPointIndex: -1,

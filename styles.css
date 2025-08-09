@@ -123,67 +123,6 @@ body {
     border-radius: 4px;
 }
 
-/* Image List Sidebar */
-#image-list-content {
-    display: flex;
-    gap: 8px;
-}
-#image-list-content.grid-view {
-    flex-wrap: wrap;
-    align-content: flex-start;
-}
-#image-list-content.list-view {
-    flex-direction: column;
-}
-
-.image-list-item {
-    border: 2px solid transparent;
-    border-radius: 8px;
-    padding: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.image-list-item:hover {
-    border-color: var(--md-sys-color-outline);
-}
-.image-list-item.selected {
-    border-color: var(--md-sys-color-primary);
-    background-color: var(--md-sys-color-surface-container-high);
-}
-
-.list-view .image-list-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.list-view .image-list-item img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
-}
-
-.grid-view .image-list-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.grid-view .image-list-item .filename {
-    font-size: 0.75rem;
-    text-align: center;
-    word-break: break-all;
-    margin-top: 4px;
-}
-
-#image-list-sidebar .btn-tonal.active {
-    background-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-}
-
-#thumbnail-size-slider {
-    accent-color: var(--md-sys-color-primary);
-}
-
 .gutter {
     background-color: var(--md-sys-color-outline-variant);
     background-repeat: no-repeat;
@@ -243,32 +182,102 @@ input[type=number] { -moz-appearance: textfield; }
 #toast-popup.error { background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-error); }
 #toast-popup.info { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 
-/* Label Viewer Sidebar */
-#label-sidebar-toggle {
-    /* The button is now in the header, so fixed positioning is not needed */
+/* Sidebar */
+#sidebar-toggles {
+    position: fixed;
+    left: 0;
+    top: 60px; /* Below header */
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-#label-sidebar-toggle.active, #image-list-sidebar-toggle.active {
+#sidebar-toggles .btn-icon {
+    width: 32px;
+    height: 48px;
+    border-radius: 0 16px 16px 0;
+    background-color: var(--md-sys-color-surface-container-high);
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
+#sidebar-toggles .btn-icon.active {
     background-color: var(--md-sys-color-primary-container);
 }
 
-#left-panel {
-    /* This will be a flex column for the two sidebars */
-}
-
-/* Remove fixed positioning from sidebars */
-#label-sidebar, #image-list-sidebar {
+#sidebar-container {
+    position: fixed;
+    top: 57px; /* Header height */
+    bottom: 37px; /* Footer height */
+    left: 0;
+    width: 400px; /* Initial width */
+    z-index: 39;
+    display: flex;
+    flex-direction: column;
     background-color: var(--md-sys-color-surface-container);
-    /* No more fixed positioning, transform, or z-index */
-    flex-shrink: 0; /* Prevent sidebars from shrinking in the flex container */
+    border-radius: 0 16px 16px 0;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
 }
 
-#label-sidebar {
-    height: 50%; /* Initial height, will be resizable */
+#resize-handle {
+    position: absolute;
+    right: -4px;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    z-index: 41;
 }
-#image-list-sidebar {
-    height: 50%; /* Initial height, will be resizable */
+
+#label-sidebar, #image-list-sidebar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0 16px 16px 0;
+    overflow: hidden;
 }
+
+/* Image List Sidebar Specifics */
+#image-list-content {
+    display: flex;
+    gap: 8px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+#image-list-content.grid-view {
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+#image-list-content.list-view {
+    flex-direction: column;
+}
+
+.image-list-item {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.image-list-item:hover {
+    border-color: var(--md-sys-color-outline);
+}
+.image-list-item.selected {
+    border-color: var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+.list-view .image-list-item { display: flex; align-items: center; gap: 8px; }
+.list-view .image-list-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.list-view .image-list-item .filename { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.grid-view .image-list-item { display: flex; flex-direction: column; align-items: center; }
+.grid-view .image-list-item .filename { font-size: 0.75rem; text-align: center; word-break: break-all; margin-top: 4px; }
+.grid-view .image-list-item .label-status { margin-top: 2px; }
+
+#image-list-sidebar .btn-tonal.active { background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+#thumbnail-size-slider { accent-color: var(--md-sys-color-primary); }
 
 #label-content-wrapper {
     background-color: var(--md-sys-color-surface-container-low);

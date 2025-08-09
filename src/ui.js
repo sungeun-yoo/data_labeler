@@ -52,8 +52,10 @@ export function initUI() {
         btnResetShortcuts: document.getElementById('btnResetShortcuts'),
         btnSaveShortcuts: document.getElementById('btnSaveShortcuts'),
 
-        // Left Panel
-        leftPanel: document.getElementById('left-panel'),
+        // Sidebar
+        sidebarContainer: document.getElementById('sidebar-container'),
+        sidebarToggles: document.getElementById('sidebar-toggles'),
+        resizeHandle: document.getElementById('resize-handle'),
 
         // Label Sidebar
         labelSidebar: document.getElementById('label-sidebar'),
@@ -133,6 +135,8 @@ export function initUI() {
 
     // Set initial state for Label viewer
     switchLabelViewTab('live');
+    setImageListViewMode('grid');
+
     ui.classColorIndicator.addEventListener('click', () => {
         const colorInput = document.createElement('input');
         colorInput.type = 'color';
@@ -164,7 +168,6 @@ export function initUI() {
     });
 
     updateHelpUI();
-    setImageListViewMode('grid');
 }
 
 function populateShortcutModal() {
@@ -228,12 +231,12 @@ function populateShortcutModal() {
 export function updateAllUI() {
     updateHelpUI();
     updateObjectListUI();
-    updateImageListUI();
     updateDetailsPanelUI();
     updateInfoBarUI();
     updateModeIndicatorUI();
     updateClassSelectorUI();
     updateLabelView();
+    updateImageListUI();
 }
 
 export function updateClassSelectorUI() {
@@ -383,35 +386,62 @@ export function updateDetailsPanelUI() {
     updateKeypointListUI(obj);
 }
 
-let isLabelSidebarOpen = false;
-let isImageListSidebarOpen = false;
+export function toggleSidebar(sidebarName) {
+    const isAlreadyOpen = state.appState.activeSidebar === sidebarName;
+    openSidebar(isAlreadyOpen ? null : sidebarName);
+}
 
-function updateSidebarsVisibility() {
-    ui.labelSidebar.classList.toggle('hidden', !isLabelSidebarOpen);
-    ui.imageListSidebar.classList.toggle('hidden', !isImageListSidebarOpen);
-    ui.labelSidebarToggle.classList.toggle('active', isLabelSidebarOpen);
-    ui.imageListSidebarToggle.classList.toggle('active', isImageListSidebarOpen);
+function openSidebar(sidebarName) {
+    state.appState.activeSidebar = sidebarName;
 
-    const isAnySidebarOpen = isLabelSidebarOpen || isImageListSidebarOpen;
-    ui.leftPanel.classList.toggle('hidden', !isAnySidebarOpen);
+    // Hide/show main container
+    if (sidebarName === null) {
+        ui.sidebarContainer.classList.add('hidden');
+    } else {
+        ui.sidebarContainer.classList.remove('hidden');
+    }
 
-    // Adjust the split sizes
-    const sizes = window.appSplits.mainSplit.getSizes();
-    if (isAnySidebarOpen && sizes[0] < 5) {
-        window.appSplits.mainSplit.setSizes([20, 55, 25]);
-    } else if (!isAnySidebarOpen) {
-        window.appSplits.mainSplit.setSizes([0, 75, 25]);
+    // Show the correct sidebar
+    ui.labelSidebar.classList.toggle('hidden', sidebarName !== 'label');
+    ui.imageListSidebar.classList.toggle('hidden', sidebarName !== 'image-list');
+
+    // Update toggle buttons state
+    ui.labelSidebarToggle.classList.toggle('active', sidebarName === 'label');
+    ui.imageListSidebarToggle.classList.toggle('active', sidebarName === 'image-list');
+
+    // Move toggles to be flush with the opened sidebar
+    const containerWidth = ui.sidebarContainer.offsetWidth;
+    if (sidebarName !== null) {
+        ui.sidebarToggles.style.transform = `translateX(${containerWidth}px)`;
+    } else {
+        ui.sidebarToggles.style.transform = 'translateX(0px)';
     }
 }
 
-export function toggleLabelSidebar() {
-    isLabelSidebarOpen = !isLabelSidebarOpen;
-    updateSidebarsVisibility();
-}
+export function initializeSidebarResizing() {
+    let isResizing = false;
+    ui.resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
 
-export function toggleImageListSidebar() {
-    isImageListSidebarOpen = !isImageListSidebarOpen;
-    updateSidebarsVisibility();
+    window.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const newWidth = e.clientX;
+        if (newWidth > 250 && newWidth < 800) { // Min/max width
+            ui.sidebarContainer.style.width = `${newWidth}px`;
+            ui.sidebarToggles.style.transform = `translateX(${newWidth}px)`;
+        }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    });
 }
 
 export function switchLabelViewTab(tab) {
@@ -620,6 +650,7 @@ export function updateInfoBarUI() {
 }
 
 export function updateImageListUI() {
+    if (!ui.imageListContent) return;
     ui.imageListContent.innerHTML = '';
     if (!state.imageFiles || state.imageFiles.length === 0) return;
 
@@ -670,6 +701,7 @@ export function updateImageListUI() {
             img.style.width = `${thumbSize}px`;
             img.style.height = `${thumbSize}px`;
             item.appendChild(filenameSpan);
+            item.appendChild(statusDiv); // Add status to grid view as well
         }
 
         fragment.appendChild(item);
@@ -695,7 +727,7 @@ export function setImageListViewMode(mode) {
         ui.btnViewModeGrid.classList.add('active');
         ui.btnViewModeList.classList.remove('active');
     }
-    updateImageListUI(); // Redraw the list with the new layout
+    updateImageListUI();
 }
 
 export function updateThumbnailSizes() {

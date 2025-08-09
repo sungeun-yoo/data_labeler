@@ -1,8 +1,8 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleLabelSidebar, toggleImageListSidebar, switchLabelViewTab, setImageListViewMode, updateThumbnailSizes } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleSidebar, switchLabelViewTab, initializeSidebarResizing, setImageListViewMode, updateThumbnailSizes } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
-import { navigateImage, jumpToImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
+import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection, jumpToImage } from './file.js';
 import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
 import { getKeyToActionMap } from './shortcutManager.js';
 
@@ -111,9 +111,10 @@ export function initializeEventListeners() {
         }
     });
 
-    // Sidebars
-    ui.labelSidebarToggle.addEventListener('click', toggleLabelSidebar);
-    ui.imageListSidebarToggle.addEventListener('click', toggleImageListSidebar);
+    // Sidebar Toggles
+    ui.labelSidebarToggle.addEventListener('click', () => toggleSidebar('label'));
+    ui.imageListSidebarToggle.addEventListener('click', () => toggleSidebar('image-list'));
+    initializeSidebarResizing();
 
     // Label Viewer
     ui.btnLiveJson.addEventListener('click', () => switchLabelViewTab('live'));
