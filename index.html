@@ -34,46 +34,71 @@
         </div>
     </header>
 
-    <!-- Label Viewer Sidebar -->
-    <button id="label-sidebar-toggle" class="btn btn-icon" title="Label Viewer">
-        <!-- Icon will be inserted by JS -->
-    </button>
-    <aside id="label-sidebar" class="shadow-lg">
-        <div class="p-4" style="background-color: var(--md-sys-color-surface-container-high);">
-            <h2 class="text-lg font-bold">Label Viewer</h2>
+    <!-- Left Sidebar Container -->
+    <div id="left-sidebar-container">
+        <!-- Sidebar Toggles -->
+        <div id="left-sidebar-toggles">
+            <button id="label-sidebar-toggle" class="btn btn-icon" title="Label Viewer">
+                <!-- Icon will be inserted by JS -->
+            </button>
+            <button id="image-list-sidebar-toggle" class="btn btn-icon" title="Image List">
+                <!-- Icon will be inserted by JS -->
+            </button>
         </div>
-        <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
-            <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">JSON</button>
-            <button id="btn-coco-json" class="btn btn-tonal flex-grow text-sm">COCO</button>
-            <button id="btn-yolo-pose" class="btn btn-tonal flex-grow text-sm">YOLO</button>
-        </div>
-        <div id="label-content-wrapper" class="flex-grow p-2 overflow-y-auto">
-            <!-- Live JSON Content -->
-            <div id="live-json-content" class="relative h-full">
-                <div class="absolute top-0 right-0 flex gap-1 z-10">
-                    <button id="btn-copy-live" class="btn btn-icon btn-tonal"></button>
-                    <button id="btn-download-live" class="btn btn-icon btn-tonal"></button>
-                </div>
-                <pre><code id="live-json-output" class="text-xs">{}</code></pre>
+
+        <!-- Label Viewer Panel -->
+        <aside id="label-sidebar" class="shadow-lg">
+            <div class="p-4" style="background-color: var(--md-sys-color-surface-container-high);">
+                <h2 class="text-lg font-bold">Label Viewer</h2>
             </div>
-            <!-- COCO JSON Content -->
-            <div id="coco-json-content" class="hidden relative h-full">
-                <div class="absolute top-0 right-0 flex gap-1 z-10">
-                    <button id="btn-copy-coco" class="btn btn-icon btn-tonal"></button>
-                    <button id="btn-download-coco" class="btn btn-icon btn-tonal"></button>
-                </div>
-                <pre><code id="coco-json-output" class="text-xs">{}</code></pre>
+            <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
+                <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">JSON</button>
+                <button id="btn-coco-json" class="btn btn-tonal flex-grow text-sm">COCO</button>
+                <button id="btn-yolo-pose" class="btn btn-tonal flex-grow text-sm">YOLO</button>
             </div>
-            <!-- YOLO Pose Content -->
-            <div id="yolo-pose-content" class="hidden relative h-full">
-                <div class="absolute top-0 right-0 flex gap-1 z-10">
-                    <button id="btn-copy-yolo" class="btn btn-icon btn-tonal"></button>
-                    <button id="btn-download-yolo" class="btn btn-icon btn-tonal"></button>
+            <div id="label-content-wrapper" class="flex-grow p-2 overflow-y-auto">
+                <div id="live-json-content" class="relative h-full">
+                    <div class="absolute top-0 right-0 flex gap-1 z-10">
+                        <button id="btn-copy-live" class="btn btn-icon btn-tonal"></button>
+                        <button id="btn-download-live" class="btn btn-icon btn-tonal"></button>
+                    </div>
+                    <pre><code id="live-json-output" class="text-xs">{}</code></pre>
                 </div>
-                <pre><code id="yolo-pose-output" class="text-xs"></code></pre>
+                <div id="coco-json-content" class="hidden relative h-full">
+                    <div class="absolute top-0 right-0 flex gap-1 z-10">
+                        <button id="btn-copy-coco" class="btn btn-icon btn-tonal"></button>
+                        <button id="btn-download-coco" class="btn btn-icon btn-tonal"></button>
+                    </div>
+                    <pre><code id="coco-json-output" class="text-xs">{}</code></pre>
+                </div>
+                <div id="yolo-pose-content" class="hidden relative h-full">
+                    <div class="absolute top-0 right-0 flex gap-1 z-10">
+                        <button id="btn-copy-yolo" class="btn btn-icon btn-tonal"></button>
+                        <button id="btn-download-yolo" class="btn btn-icon btn-tonal"></button>
+                    </div>
+                    <pre><code id="yolo-pose-output" class="text-xs"></code></pre>
+                </div>
             </div>
-        </div>
-    </aside>
+        </aside>
+
+        <!-- Image List Panel -->
+        <aside id="image-list-sidebar" class="shadow-lg">
+            <div class="p-4 flex justify-between items-center" style="background-color: var(--md-sys-color-surface-container-high);">
+                <h2 class="text-lg font-bold">Image List</h2>
+            </div>
+            <div class="p-2 gap-2 flex items-center" style="background-color: var(--md-sys-color-surface-container);">
+                <button id="view-mode-icon" class="btn btn-icon btn-tonal active"></button>
+                <button id="view-mode-list" class="btn btn-icon btn-tonal"></button>
+                <input type="range" id="thumbnail-size-slider" min="50" max="200" value="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+            </div>
+            <div id="image-list-content-wrapper" class="flex-grow p-2 overflow-y-auto">
+                <!-- Image items will be populated here -->
+            </div>
+        </aside>
+
+        <!-- Resizer -->
+        <div id="left-sidebar-resizer"></div>
+    </div>
 
 
     <!-- 메인 컨텐츠 영역 -->
