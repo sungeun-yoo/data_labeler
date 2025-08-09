@@ -163,7 +163,6 @@ export function initializeEventListeners() {
 
     ui.thumbnailSizeSlider.addEventListener('input', (e) => {
         ui.imageListContentWrapper.style.setProperty('--thumbnail-size', `${e.target.value}px`);
-        updateImageListUI();
     });
 
 

@@ -387,6 +387,12 @@ export function updateDetailsPanelUI() {
 }
 
 let activeSidebar = null; // Can be 'label' or 'image'
+const imageUrlCache = new Map();
+
+export function clearImageCache() {
+    imageUrlCache.forEach(url => URL.revokeObjectURL(url));
+    imageUrlCache.clear();
+}
 
 export function switchSidebar(sidebarName) {
     const isAlreadyOpen = activeSidebar === sidebarName;
@@ -425,71 +431,87 @@ export function switchSidebar(sidebarName) {
 
 export function updateImageListUI() {
     const wrapper = ui.imageListContentWrapper;
-    wrapper.innerHTML = ''; // Clear previous items
+    const items = wrapper.children;
 
-    if (state.imageFiles.length === 0) {
-        wrapper.innerHTML = `<p class="text-gray-500 text-center col-span-full">이미지가 없습니다.</p>`;
-        return;
+    // If DOM items don't match data, or if view mode has changed, rebuild everything
+    if (items.length !== state.imageFiles.length ||
+        (items.length > 0 && wrapper.classList.contains('list-view') !== items[0].classList.contains('list-view-item'))) {
+
+        wrapper.innerHTML = ''; // Clear previous items
+        if (state.imageFiles.length === 0) {
+            wrapper.innerHTML = `<p class="text-gray-500 text-center col-span-full">이미지가 없습니다.</p>`;
+            return;
+        }
+        const isListView = wrapper.classList.contains('list-view');
+
+        state.imageFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'image-list-item';
+            if (isListView) item.classList.add('list-view-item');
+            item.dataset.imageIndex = index;
+
+            let imageUrl = imageUrlCache.get(file.name);
+            if (!imageUrl) {
+                imageUrl = URL.createObjectURL(file);
+                imageUrlCache.set(file.name, imageUrl);
+            }
+            const img = document.createElement('img');
+            img.src = imageUrl;
+
+            item.appendChild(img); // Append the image first
+
+            const infoWrapper = document.createElement('div');
+            item.appendChild(infoWrapper); // Then the rest of the info
+
+            wrapper.appendChild(item);
+        });
     }
 
-    const isListView = wrapper.classList.contains('list-view');
-
-    state.imageFiles.forEach((file, index) => {
-        const item = document.createElement('div');
-        item.className = 'image-list-item';
-        if (isListView) {
-            item.classList.add('list-view-item');
-        }
-        if (index === state.currentImageIndex) {
-            item.classList.add('selected');
-        }
-        item.dataset.imageIndex = index;
-
-        const img = document.createElement('img');
-        // Use a cache or placeholder mechanism if loading is slow
-        img.src = URL.createObjectURL(file);
-        img.onload = () => URL.revokeObjectURL(img.src); // Clean up memory
-
+    // Now, update the state of the existing (or newly created) items
+    Array.from(items).forEach((item, index) => {
+        const file = state.imageFiles[index];
         const annotation = state.annotationData[file.name] || { objects: [] };
         const objectCount = annotation.objects.length;
         const isCompleted = objectCount > 0;
 
-        if (isListView) {
-            const statusIcon = isCompleted
-                ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
-                : '<span class="status-icon"></span>'; // Empty span to maintain alignment
+        // Update selection
+        item.classList.toggle('selected', index === state.currentImageIndex);
 
-            item.innerHTML = `
-                <div class="info">
-                    <span class="filename" title="${file.name}">${file.name}</span>
-                    <span class="status">
-                        ${statusIcon}
-                        <span>obj ${objectCount}</span>
-                    </span>
-                </div>
-            `;
+        // Update content (only if it needs to be changed)
+        const isListView = wrapper.classList.contains('list-view');
+        let currentContent;
+
+        if (isListView) {
+            const statusIconHTML = isCompleted
+                ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
+                : '<span class="status-icon"></span>';
+
+            currentContent = `<div class="info"><span class="filename" title="${file.name}">${file.name}</span><span class="status">${statusIconHTML}<span>obj ${objectCount}</span></span></div>`;
         } else {
-            const statusIcon = isCompleted
+             const statusIconHTML = isCompleted
                 ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
                 : '';
             const objCountText = objectCount > 0 ? `<span class="obj-count">obj ${objectCount}</span>` : '';
-
-            item.innerHTML = `
-                <div class="icon-view-status">
-                    ${statusIcon}
-                    ${objCountText}
-                </div>
-                <div class="info">${file.name}</div>
-            `;
+            const statusHTML = `<div class="icon-view-status">${statusIconHTML}${objCountText}</div>`;
+            currentContent = `${statusHTML}<div class="info">${file.name}</div>`;
         }
-        item.insertBefore(img, item.firstChild);
-        wrapper.appendChild(item);
+
+        // Only update innerHTML if it has actually changed to prevent flicker
+        const infoWrapper = item.querySelector('div'); // The first div is the info wrapper
+        if (infoWrapper.innerHTML !== currentContent) {
+            infoWrapper.innerHTML = currentContent;
+        }
     });
 
-    // Scroll to the selected item
+
+    // Scroll to the selected item if it's not already visible
     const selectedItem = wrapper.querySelector('.selected');
     if (selectedItem) {
-        selectedItem.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const itemRect = selectedItem.getBoundingClientRect();
+        if (itemRect.top < wrapperRect.top || itemRect.bottom > wrapperRect.bottom) {
+            selectedItem.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
     }
 }
 
