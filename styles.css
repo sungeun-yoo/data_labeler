@@ -390,9 +390,18 @@ input[type=number] { -moz-appearance: textfield; }
     font-size: 12px;
     flex-shrink: 0;
 }
-.list-view-item .status input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+.list-view-item .status .status-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+}
+.list-view-item .status .status-icon.completed {
+    background-color: #4CAF50; /* Green */
+    border-radius: 50%;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Slider style */
