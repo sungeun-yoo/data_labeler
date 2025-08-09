@@ -52,9 +52,15 @@ export function initUI() {
         btnResetShortcuts: document.getElementById('btnResetShortcuts'),
         btnSaveShortcuts: document.getElementById('btnSaveShortcuts'),
 
-        // Label Sidebar
+        // Left Sidebar
+        leftSidebarContainer: document.getElementById('left-sidebar-container'),
         labelSidebar: document.getElementById('label-sidebar'),
         labelSidebarToggle: document.getElementById('label-sidebar-toggle'),
+        imageListSidebar: document.getElementById('image-list-sidebar'),
+        imageListSidebarToggle: document.getElementById('image-list-sidebar-toggle'),
+        leftSidebarResizer: document.getElementById('left-sidebar-resizer'),
+
+        // Label Viewer panel
         btnLiveJson: document.getElementById('btn-live-json'),
         btnCocoJson: document.getElementById('btn-coco-json'),
         btnYoloPose: document.getElementById('btn-yolo-pose'),
@@ -70,9 +76,18 @@ export function initUI() {
         btnDownloadCoco: document.getElementById('btn-download-coco'),
         btnCopyYolo: document.getElementById('btn-copy-yolo'),
         btnDownloadYolo: document.getElementById('btn-download-yolo'),
+
+        // Image List panel
+        imageListContentWrapper: document.getElementById('image-list-content-wrapper'),
+        viewModeIcon: document.getElementById('view-mode-icon'),
+        viewModeList: document.getElementById('view-mode-list'),
+        thumbnailSizeSlider: document.getElementById('thumbnail-size-slider'),
     });
 
     ui.labelSidebarToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>`;
+    ui.imageListSidebarToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>`;
+    ui.viewModeIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 8.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 018.25 20.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>`;
+    ui.viewModeList.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>`;
 
     const copyIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>`;
     const downloadIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>`;
@@ -219,6 +234,9 @@ export function updateAllUI() {
     updateModeIndicatorUI();
     updateClassSelectorUI();
     updateLabelView();
+    if (activeSidebar === 'image') {
+        updateImageListUI();
+    }
 }
 
 export function updateClassSelectorUI() {
@@ -368,10 +386,103 @@ export function updateDetailsPanelUI() {
     updateKeypointListUI(obj);
 }
 
-export function toggleLabelSidebar() {
-    ui.labelSidebar.classList.toggle('active');
-    ui.labelSidebarToggle.classList.toggle('active');
+let activeSidebar = null; // Can be 'label' or 'image'
+
+export function switchSidebar(sidebarName) {
+    const isAlreadyOpen = activeSidebar === sidebarName;
+
+    // Close any open sidebar first
+    if (activeSidebar) {
+        const currentSidebar = ui[`${activeSidebar}Sidebar`];
+        const currentToggle = ui[`${activeSidebar}SidebarToggle`];
+        currentSidebar.classList.remove('active');
+        currentToggle.classList.remove('active');
+        currentSidebar.style.display = 'none';
+    }
+
+    // If it was already open, we just wanted to close it.
+    if (isAlreadyOpen) {
+        activeSidebar = null;
+        ui.leftSidebarContainer.classList.remove('toggled');
+    } else {
+        // Open the new sidebar
+        const newSidebar = ui[`${sidebarName}Sidebar`];
+        const newToggle = ui[`${sidebarName}SidebarToggle`];
+        newSidebar.style.display = 'flex';
+        // Timeout to allow display property to apply before transition
+        setTimeout(() => {
+            newSidebar.classList.add('active');
+            newToggle.classList.add('active');
+            ui.leftSidebarContainer.classList.add('toggled');
+        }, 10);
+        activeSidebar = sidebarName;
+
+        if (sidebarName === 'image') {
+            updateImageListUI();
+        }
+    }
 }
+
+export function updateImageListUI() {
+    const wrapper = ui.imageListContentWrapper;
+    wrapper.innerHTML = ''; // Clear previous items
+
+    if (state.imageFiles.length === 0) {
+        wrapper.innerHTML = `<p class="text-gray-500 text-center col-span-full">이미지가 없습니다.</p>`;
+        return;
+    }
+
+    const isListView = wrapper.classList.contains('list-view');
+
+    state.imageFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'image-list-item';
+        if (isListView) {
+            item.classList.add('list-view-item');
+        }
+        if (index === state.currentImageIndex) {
+            item.classList.add('selected');
+        }
+        item.dataset.imageIndex = index;
+
+        const img = document.createElement('img');
+        // Use a cache or placeholder mechanism if loading is slow
+        img.src = URL.createObjectURL(file);
+        img.onload = () => URL.revokeObjectURL(img.src); // Clean up memory
+
+        const annotation = state.annotationData[file.name] || { objects: [] };
+        const objectCount = annotation.objects.length;
+        const isCompleted = objectCount > 0;
+
+        if (isListView) {
+            item.innerHTML = `
+                <img>
+                <div class="info">
+                    <span class="filename" title="${file.name}">${file.name}</span>
+                    <span class="status">
+                        <input type="checkbox" ${isCompleted ? 'checked' : ''} disabled>
+                        <span>obj ${objectCount}</span>
+                    </span>
+                </div>
+            `;
+            item.insertBefore(img, item.firstChild);
+        } else {
+            item.innerHTML = `
+                <img>
+                <div class="info">${file.name}</div>
+            `;
+            item.insertBefore(img, item.firstChild);
+        }
+        wrapper.appendChild(item);
+    });
+
+    // Scroll to the selected item
+    const selectedItem = wrapper.querySelector('.selected');
+    if (selectedItem) {
+        selectedItem.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+}
+
 
 export function switchLabelViewTab(tab) {
     // Hide all content panels by setting display to 'none'

@@ -1,5 +1,5 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, toggleLabelSidebar, switchLabelViewTab } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, switchSidebar, switchLabelViewTab, updateImageListUI } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
@@ -111,8 +111,63 @@ export function initializeEventListeners() {
         }
     });
 
-    // Label Sidebar
-    ui.labelSidebarToggle.addEventListener('click', toggleLabelSidebar);
+    // Left Sidebar
+    ui.labelSidebarToggle.addEventListener('click', () => switchSidebar('label'));
+    ui.imageListSidebarToggle.addEventListener('click', () => switchSidebar('image'));
+
+    // Resizer
+    ui.leftSidebarResizer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        document.addEventListener('mousemove', handleResizeSidebar);
+        document.addEventListener('mouseup', stopResizeSidebar);
+    });
+
+    function handleResizeSidebar(e) {
+        const newWidth = e.clientX;
+        if (newWidth > 200 && newWidth < 800) { // Min/max width
+            const sidebarWidth = `${newWidth}px`;
+            ui.labelSidebar.style.setProperty('--sidebar-width', sidebarWidth);
+            ui.imageListSidebar.style.setProperty('--sidebar-width', sidebarWidth);
+            ui.leftSidebarContainer.style.setProperty('--sidebar-width', sidebarWidth);
+        }
+    }
+
+    function stopResizeSidebar() {
+        document.removeEventListener('mousemove', handleResizeSidebar);
+        document.removeEventListener('mouseup', stopResizeSidebar);
+    }
+
+    // Image List Panel
+    ui.imageListContentWrapper.addEventListener('click', (e) => {
+        const item = e.target.closest('.image-list-item');
+        if (item && item.dataset.imageIndex) {
+            const targetIndex = parseInt(item.dataset.imageIndex);
+            const direction = targetIndex - state.currentImageIndex;
+            navigateImage(direction);
+        }
+    });
+
+    ui.viewModeIcon.addEventListener('click', () => {
+        ui.imageListContentWrapper.classList.remove('list-view');
+        ui.viewModeIcon.classList.add('active');
+        ui.viewModeList.classList.remove('active');
+        updateImageListUI();
+    });
+
+    ui.viewModeList.addEventListener('click', () => {
+        ui.imageListContentWrapper.classList.add('list-view');
+        ui.viewModeList.classList.add('active');
+        ui.viewModeIcon.classList.remove('active');
+        updateImageListUI();
+    });
+
+    ui.thumbnailSizeSlider.addEventListener('input', (e) => {
+        ui.imageListContentWrapper.style.setProperty('--thumbnail-size', `${e.target.value}px`);
+        updateImageListUI();
+    });
+
+
+    // Label Viewer Panel
     ui.btnLiveJson.addEventListener('click', () => switchLabelViewTab('live'));
     ui.btnCocoJson.addEventListener('click', () => switchLabelViewTab('coco'));
     ui.btnYoloPose.addEventListener('click', () => switchLabelViewTab('yolo'));
