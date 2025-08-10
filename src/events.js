@@ -118,6 +118,7 @@ export function initializeEventListeners() {
     // Resizer
     ui.leftSidebarResizer.addEventListener('mousedown', (e) => {
         e.preventDefault();
+        ui.leftSidebarContainer.classList.add('is-resizing');
         document.addEventListener('mousemove', handleResizeSidebar);
         document.addEventListener('mouseup', stopResizeSidebar);
     });
@@ -133,6 +134,7 @@ export function initializeEventListeners() {
     }
 
     function stopResizeSidebar() {
+        ui.leftSidebarContainer.classList.remove('is-resizing');
         document.removeEventListener('mousemove', handleResizeSidebar);
         document.removeEventListener('mouseup', stopResizeSidebar);
     }
