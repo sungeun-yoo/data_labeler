@@ -1,0 +1,42 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 -->
+  <rect width="256" height="256" fill="#2c3e50" rx="30" />
+
+  <!-- 스타일 정의 -->
+  <defs>
+    <style>
+      .bone { stroke: #bdc3c7; stroke-width: 10; stroke-linecap: round; }
+      /* 모든 관절(랜드마크) 포인트를 파란색으로 변경 */
+      .joint { fill: #3498db; }
+      .highlight-joint { fill: #3498db; }
+      .highlight-symbol { stroke: #3498db; stroke-width: 10; stroke-linecap: round; }
+    </style>
+  </defs>
+
+  <!-- 포즈 스켈레톤 -->
+  <!-- 몸통 -->
+  <line x1="128" y1="90" x2="128" y2="160" class="bone" />
+  <!-- 팔 -->
+  <line x1="128" y1="105" x2="80" y2="135" class="bone" />
+  <line x1="128" y1="105" x2="176" y2="135" class="bone" />
+  <!-- 다리 -->
+  <line x1="128" y1="160" x2="100" y2="210" class="bone" />
+  <line x1="128" y1="160" x2="156" y2="210" class="bone" />
+
+  <!-- 관절 -->
+  <circle cx="128" cy="70" r="12" class="joint" /> <!-- 머리 -->
+  <circle cx="128" cy="105" r="7" class="joint" /> <!-- 목/어깨 관절 -->
+  <circle cx="80" cy="135" r="7" class="joint" /> <!-- 왼손 -->
+  <circle cx="176" y1="135" r="7" class="joint" /> <!-- 오른손 -->
+  <circle cx="128" cy="160" r="7" class="joint" /> <!-- 골반 -->
+  <circle cx="100" cy="210" r="7" class="joint" /> <!-- 왼발 -->
+
+  <!-- 강조된 관절 (반지름 크기를 14에서 7로 수정) -->
+  <circle cx="156" cy="210" r="7" class="highlight-joint" /> <!-- 오른발 -->
+
+  <!-- 강조된 관절 근처의 더하기 기호 -->
+  <g transform="translate(195, 210) scale(1.2)">
+    <line x1="-10" y1="0" x2="10" y2="0" class="highlight-symbol" />
+    <line x1="0" y1="-10" x2="0" y2="10" class="highlight-symbol" />
+  </g>
+</svg>
