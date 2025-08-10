@@ -34,99 +34,101 @@
         </div>
     </header>
 
-    <!-- Left Sidebar Container -->
-    <div id="left-sidebar-container">
-        <!-- Sidebar Toggles -->
-        <div id="left-sidebar-toggles">
-            <button id="label-sidebar-toggle" class="btn btn-icon" title="Label Viewer">
-                <!-- Icon will be inserted by JS -->
-            </button>
-            <button id="image-list-sidebar-toggle" class="btn btn-icon" title="Image List">
-                <!-- Icon will be inserted by JS -->
-            </button>
+    <div id="app-body" class="flex flex-row flex-grow overflow-hidden">
+        <!-- Left Sidebar Container -->
+        <div id="left-sidebar-container">
+            <!-- Sidebar Toggles -->
+            <div id="left-sidebar-toggles">
+                <button id="label-sidebar-toggle" class="btn btn-icon" title="Label Viewer">
+                    <!-- Icon will be inserted by JS -->
+                </button>
+                <button id="image-list-sidebar-toggle" class="btn btn-icon" title="Image List">
+                    <!-- Icon will be inserted by JS -->
+                </button>
+            </div>
+
+            <!-- Label Viewer Panel -->
+            <aside id="label-sidebar" class="shadow-lg">
+                <div class="p-4" style="background-color: var(--md-sys-color-surface-container-high);">
+                    <h2 class="text-lg font-bold">Label Viewer</h2>
+                </div>
+                <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
+                    <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">JSON</button>
+                    <button id="btn-coco-json" class="btn btn-tonal flex-grow text-sm">COCO</button>
+                    <button id="btn-yolo-pose" class="btn btn-tonal flex-grow text-sm">YOLO</button>
+                </div>
+                <div id="label-content-wrapper" class="flex-grow p-2 overflow-y-auto">
+                    <div id="live-json-content" class="relative h-full">
+                        <div class="absolute top-0 right-0 flex gap-1 z-10">
+                            <button id="btn-copy-live" class="btn btn-icon btn-tonal"></button>
+                            <button id="btn-download-live" class="btn btn-icon btn-tonal"></button>
+                        </div>
+                        <pre><code id="live-json-output" class="text-xs">{}</code></pre>
+                    </div>
+                    <div id="coco-json-content" class="hidden relative h-full">
+                        <div class="absolute top-0 right-0 flex gap-1 z-10">
+                            <button id="btn-copy-coco" class="btn btn-icon btn-tonal"></button>
+                            <button id="btn-download-coco" class="btn btn-icon btn-tonal"></button>
+                        </div>
+                        <pre><code id="coco-json-output" class="text-xs">{}</code></pre>
+                    </div>
+                    <div id="yolo-pose-content" class="hidden relative h-full">
+                        <div class="absolute top-0 right-0 flex gap-1 z-10">
+                            <button id="btn-copy-yolo" class="btn btn-icon btn-tonal"></button>
+                            <button id="btn-download-yolo" class="btn btn-icon btn-tonal"></button>
+                        </div>
+                        <pre><code id="yolo-pose-output" class="text-xs"></code></pre>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Image List Panel -->
+            <aside id="image-list-sidebar" class="shadow-lg">
+                <div class="p-4 flex justify-between items-center" style="background-color: var(--md-sys-color-surface-container-high);">
+                    <h2 class="text-lg font-bold">Image List</h2>
+                </div>
+                <div class="p-2 gap-2 flex items-center" style="background-color: var(--md-sys-color-surface-container);">
+                    <button id="view-mode-icon" class="btn btn-icon btn-tonal active"></button>
+                    <button id="view-mode-list" class="btn btn-icon btn-tonal"></button>
+                    <input type="range" id="thumbnail-size-slider" min="50" max="200" value="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div id="image-list-content-wrapper" class="flex-grow p-2 overflow-y-auto">
+                    <!-- Image items will be populated here -->
+                </div>
+            </aside>
+
+            <!-- Resizer -->
+            <div id="left-sidebar-resizer"></div>
         </div>
 
-        <!-- Label Viewer Panel -->
-        <aside id="label-sidebar" class="shadow-lg">
-            <div class="p-4" style="background-color: var(--md-sys-color-surface-container-high);">
-                <h2 class="text-lg font-bold">Label Viewer</h2>
-            </div>
-            <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
-                <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">JSON</button>
-                <button id="btn-coco-json" class="btn btn-tonal flex-grow text-sm">COCO</button>
-                <button id="btn-yolo-pose" class="btn btn-tonal flex-grow text-sm">YOLO</button>
-            </div>
-            <div id="label-content-wrapper" class="flex-grow p-2 overflow-y-auto">
-                <div id="live-json-content" class="relative h-full">
-                    <div class="absolute top-0 right-0 flex gap-1 z-10">
-                        <button id="btn-copy-live" class="btn btn-icon btn-tonal"></button>
-                        <button id="btn-download-live" class="btn btn-icon btn-tonal"></button>
+
+        <!-- 메인 컨텐츠 영역 -->
+        <div id="split-container" class="flex-grow flex p-4 overflow-hidden">
+            <!-- 중앙 캔버스 -->
+            <main id="split-0" class="rounded-2xl shadow-lg flex items-center justify-center overflow-hidden relative" style="background-color: #000;">
+                <canvas id="mainCanvas" class="rounded-md shadow-inner"></canvas>
+                <div id="mode-indicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-2 py-1 rounded hidden"></div>
+                <div id="canvas-loader" class="absolute inset-0 bg-black bg-opacity-50 flex-col items-center justify-center text-white text-lg hidden"></div>
+            </main>
+
+            <!-- 오른쪽 패널 -->
+            <aside id="split-1" class="rounded-2xl shadow-lg flex flex-col" style="background-color: var(--md-sys-color-surface-container);">
+                <div class="p-4 border-b flex items-center gap-4" style="border-color: var(--md-sys-color-outline-variant);">
+                    <div id="class-selector-wrapper" class="hidden flex-grow">
+                        <div class="flex items-center gap-2">
+                            <span id="class-color-indicator" class="w-5 h-5 rounded-full block flex-shrink-0"></span>
+                            <select id="class-selector" class="w-full rounded-md p-2 flex-grow" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
+                        </div>
                     </div>
-                    <pre><code id="live-json-output" class="text-xs">{}</code></pre>
+                    <button id="btnAddObject" class="btn btn-filled" disabled>+ 객체 추가</button>
                 </div>
-                <div id="coco-json-content" class="hidden relative h-full">
-                    <div class="absolute top-0 right-0 flex gap-1 z-10">
-                        <button id="btn-copy-coco" class="btn btn-icon btn-tonal"></button>
-                        <button id="btn-download-coco" class="btn btn-icon btn-tonal"></button>
-                    </div>
-                    <pre><code id="coco-json-output" class="text-xs">{}</code></pre>
+                <div class="flex-grow details-scroll-container">
+                    <div id="config-help" class="p-4 text-sm" style="color: var(--md-sys-color-on-surface-variant);"></div>
+                    <div id="object-list-wrapper" class="p-2 space-y-2"></div>
+                    <div id="details-wrapper" class="p-2 border-t hidden" style="border-color: var(--md-sys-color-outline-variant);"></div>
                 </div>
-                <div id="yolo-pose-content" class="hidden relative h-full">
-                    <div class="absolute top-0 right-0 flex gap-1 z-10">
-                        <button id="btn-copy-yolo" class="btn btn-icon btn-tonal"></button>
-                        <button id="btn-download-yolo" class="btn btn-icon btn-tonal"></button>
-                    </div>
-                    <pre><code id="yolo-pose-output" class="text-xs"></code></pre>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Image List Panel -->
-        <aside id="image-list-sidebar" class="shadow-lg">
-            <div class="p-4 flex justify-between items-center" style="background-color: var(--md-sys-color-surface-container-high);">
-                <h2 class="text-lg font-bold">Image List</h2>
-            </div>
-            <div class="p-2 gap-2 flex items-center" style="background-color: var(--md-sys-color-surface-container);">
-                <button id="view-mode-icon" class="btn btn-icon btn-tonal active"></button>
-                <button id="view-mode-list" class="btn btn-icon btn-tonal"></button>
-                <input type="range" id="thumbnail-size-slider" min="50" max="200" value="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
-            </div>
-            <div id="image-list-content-wrapper" class="flex-grow p-2 overflow-y-auto">
-                <!-- Image items will be populated here -->
-            </div>
-        </aside>
-
-        <!-- Resizer -->
-        <div id="left-sidebar-resizer"></div>
-    </div>
-
-
-    <!-- 메인 컨텐츠 영역 -->
-    <div id="split-container" class="flex-grow flex p-4 gap-4 overflow-hidden">
-        <!-- 중앙 캔버스 -->
-        <main id="split-0" class="rounded-2xl shadow-lg flex items-center justify-center overflow-hidden relative" style="background-color: #000;">
-            <canvas id="mainCanvas" class="rounded-md shadow-inner"></canvas>
-            <div id="mode-indicator" class="absolute top-2 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-2 py-1 rounded hidden"></div>
-            <div id="canvas-loader" class="absolute inset-0 bg-black bg-opacity-50 flex-col items-center justify-center text-white text-lg hidden"></div>
-        </main>
-
-        <!-- 오른쪽 패널 -->
-        <aside id="split-1" class="rounded-2xl shadow-lg flex flex-col" style="background-color: var(--md-sys-color-surface-container);">
-            <div class="p-4 border-b flex items-center gap-4" style="border-color: var(--md-sys-color-outline-variant);">
-                <div id="class-selector-wrapper" class="hidden flex-grow">
-                    <div class="flex items-center gap-2">
-                        <span id="class-color-indicator" class="w-5 h-5 rounded-full block flex-shrink-0"></span>
-                        <select id="class-selector" class="w-full rounded-md p-2 flex-grow" style="background-color: var(--md-sys-color-surface-container-highest);"></select>
-                    </div>
-                </div>
-                <button id="btnAddObject" class="btn btn-filled" disabled>+ 객체 추가</button>
-            </div>
-            <div class="flex-grow details-scroll-container">
-                <div id="config-help" class="p-4 text-sm" style="color: var(--md-sys-color-on-surface-variant);"></div>
-                <div id="object-list-wrapper" class="p-2 space-y-2"></div>
-                <div id="details-wrapper" class="p-2 border-t hidden" style="border-color: var(--md-sys-color-outline-variant);"></div>
-            </div>
-        </aside>
+            </aside>
+        </div>
     </div>
     
     <footer class="p-2 shadow-inner flex-shrink-0 flex justify-between items-center text-sm" style="background-color: var(--md-sys-color-surface-container-high); border-top: 1px solid var(--md-sys-color-outline-variant);"></footer>

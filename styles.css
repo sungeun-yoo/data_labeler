@@ -189,13 +189,25 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Left Sidebar Container */
 #left-sidebar-container {
-    position: fixed;
-    left: 0;
-    top: 57px; /* Header height */
-    bottom: 37px; /* Footer height */
+    position: relative;
     display: flex;
+    width: 0;
+    height: 100%;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 40;
-    pointer-events: none; /* Allow clicks to pass through container */
+    flex-shrink: 0;
+}
+
+#left-sidebar-container.toggled {
+    width: var(--sidebar-width, 400px);
+}
+
+#left-sidebar-container.is-resizing {
+    transition: none;
+}
+
+#left-sidebar-container.is-resizing #left-sidebar-toggles {
+    transition: none;
 }
 
 /* Sidebar Toggle Buttons */
@@ -254,21 +266,19 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Common Sidebar Panel Styles */
 #label-sidebar, #image-list-sidebar {
-    width: var(--sidebar-width, 400px);
+    width: 100%;
     height: 100%;
     background-color: var(--md-sys-color-surface-container);
     display: flex;
     flex-direction: column;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 0 16px 16px 0;
     pointer-events: auto; /* Enable interaction with panel */
     display: none; /* Initially hidden, controlled by JS */
+    overflow: hidden;
 }
 
 #label-sidebar.active, #image-list-sidebar.active {
     display: flex; /* Show when active */
-    transform: translateX(0);
 }
 
 /* Resizer */
