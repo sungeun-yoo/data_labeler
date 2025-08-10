@@ -206,6 +206,10 @@ input[type=number] { -moz-appearance: textfield; }
     transition: none;
 }
 
+#left-sidebar-container.is-resizing #left-sidebar-toggles {
+    transition: none;
+}
+
 
 /* Sidebar Toggle Buttons */
 #left-sidebar-toggles {
