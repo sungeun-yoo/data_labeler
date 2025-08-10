@@ -469,5 +469,5 @@ input[type=range]::-moz-range-thumb {
 
 /* Adjust main content padding */
 #split-container {
-    /* padding-left: 72px; */ /* Space for the toggle buttons */
+    padding-left: 72px; /* Space for the toggle buttons */
 }

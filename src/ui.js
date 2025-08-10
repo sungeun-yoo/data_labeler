@@ -414,12 +414,13 @@ export function switchSidebar(sidebarName) {
         // Open the new sidebar
         const newSidebar = ui[`${sidebarName}Sidebar`];
         const newToggle = ui[`${sidebarName}SidebarToggle`];
-
         newSidebar.style.display = 'flex';
-        newSidebar.classList.add('active');
-        newToggle.classList.add('active');
-        ui.leftSidebarContainer.classList.add('toggled');
-
+        // Timeout to allow display property to apply before transition
+        setTimeout(() => {
+            newSidebar.classList.add('active');
+            newToggle.classList.add('active');
+            ui.leftSidebarContainer.classList.add('toggled');
+        }, 10);
         activeSidebar = sidebarName;
 
         if (sidebarName === 'image') {
