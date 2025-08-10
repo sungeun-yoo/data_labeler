@@ -8,7 +8,6 @@
       .bone { stroke: #bdc3c7; stroke-width: 10; stroke-linecap: round; }
       /* 모든 관절(랜드마크) 포인트를 파란색으로 변경 */
       .joint { fill: #3498db; }
-      .highlight-joint { fill: #3498db; }
       .highlight-symbol { stroke: #3498db; stroke-width: 10; stroke-linecap: round; }
     </style>
   </defs>
@@ -24,15 +23,13 @@
   <line x1="128" y1="160" x2="156" y2="210" class="bone" />
 
   <!-- 관절 -->
-  <circle cx="128" cy="70" r="12" class="joint" /> <!-- 머리 -->
-  <circle cx="128" cy="105" r="7" class="joint" /> <!-- 목/어깨 관절 -->
-  <circle cx="80" cy="135" r="7" class="joint" /> <!-- 왼손 -->
-  <circle cx="176" y1="135" r="7" class="joint" /> <!-- 오른손 -->
-  <circle cx="128" cy="160" r="7" class="joint" /> <!-- 골반 -->
-  <circle cx="100" cy="210" r="7" class="joint" /> <!-- 왼발 -->
-
-  <!-- 강조된 관절 (반지름 크기를 14에서 7로 수정) -->
-  <circle cx="156" cy="210" r="7" class="highlight-joint" /> <!-- 오른발 -->
+  <circle cx="128" cy="70" r="14" class="joint" /> <!-- 머리 -->
+  <circle cx="128" cy="105" r="14" class="joint" /> <!-- 목/어깨 관절 -->
+  <circle cx="80" cy="135" r="14" class="joint" /> <!-- 왼손 -->
+  <circle cx="176" cy="135" r="14" class="joint" /> <!-- 오른손 -->
+  <circle cx="128" cy="160" r="14" class="joint" /> <!-- 골반 -->
+  <circle cx="100" cy="210" r="14" class="joint" /> <!-- 왼발 -->
+  <circle cx="156" cy="210" r="14" class="joint" /> <!-- 오른발 -->
 
   <!-- 강조된 관절 근처의 더하기 기호 -->
   <g transform="translate(195, 210) scale(1.2)">
