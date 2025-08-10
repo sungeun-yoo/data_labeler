@@ -210,7 +210,6 @@ input[type=number] { -moz-appearance: textfield; }
     transition: none;
 }
 
-
 /* Sidebar Toggle Buttons */
 #left-sidebar-toggles {
     display: flex;
