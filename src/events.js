@@ -194,9 +194,11 @@ export function initializeEventListeners() {
         setTimeout(() => ui.iconModal.classList.add('visible'), 10);
     });
 
-    ui.iconModal.addEventListener('click', () => {
-        ui.iconModal.classList.remove('visible');
-        setTimeout(() => ui.iconModal.classList.add('hidden'), 300); // Wait for transition to finish
+    ui.iconModal.addEventListener('click', (e) => {
+        if (e.target === ui.iconModal) {
+            ui.iconModal.classList.remove('visible');
+            setTimeout(() => ui.iconModal.classList.add('hidden'), 300); // Wait for transition to finish
+        }
     });
 }
 
