@@ -1,0 +1,14 @@
+{
+    "pallet": {
+      "labels": [
+        "OUT_lt", "OUT_rt", "OUT_rb", "OUT_lb",
+	"IN_L_lt", "IN_L_rt", "IN_L_rb", "IN_L_lb",
+	"IN_R_lt", "IN_R_rt", "IN_R_rb", "IN_R_lb"
+      ],
+      "skeleton": [
+        [0, 1], [1, 2], [2, 3], [3, 0],
+        [4, 5], [5, 6], [6, 7], [7, 4],
+        [8, 9], [9, 10], [10, 11], [11, 8]
+      ]
+    }
+  }
