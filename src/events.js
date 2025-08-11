@@ -187,6 +187,17 @@ export function initializeEventListeners() {
         const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".txt";
         downloadFile(ui.yoloPoseOutput.textContent, filename || 'annotation.txt');
     });
+
+    // Icon Modal
+    ui.appIcon.addEventListener('click', () => {
+        ui.iconModal.classList.remove('hidden');
+        setTimeout(() => ui.iconModal.classList.add('visible'), 10);
+    });
+
+    ui.iconModal.addEventListener('click', () => {
+        ui.iconModal.classList.remove('visible');
+        setTimeout(() => ui.iconModal.classList.add('hidden'), 300); // Wait for transition to finish
+    });
 }
 
 function handleMouseDown(e) {

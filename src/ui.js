@@ -11,6 +11,7 @@ let tempShortcutConfig = {};
 export function initUI() {
     Object.assign(ui, {
         // Top bar
+        appIcon: document.getElementById('app-icon'),
         btnLoadConfig: document.getElementById('btnLoadConfig'),
         configLoader: document.getElementById('configLoader'),
         btnLoadDir: document.getElementById('btnLoadDir'),
@@ -47,6 +48,8 @@ export function initUI() {
         // Modals & Popups
         toastPopup: document.getElementById('toast-popup'),
         shortcutModal: document.getElementById('shortcutModal'),
+        iconModal: document.getElementById('icon-modal'),
+        iconModalContent: document.getElementById('icon-modal-content'),
         btnModalClose: document.getElementById('btnModalClose'),
         shortcutList: document.getElementById('shortcutList'),
         btnResetShortcuts: document.getElementById('btnResetShortcuts'),

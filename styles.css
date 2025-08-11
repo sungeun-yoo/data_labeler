@@ -483,3 +483,24 @@ input[type=range]::-moz-range-thumb {
 #split-container {
     padding-left: 72px; /* Space for the toggle buttons */
 }
+
+/* Icon Modal Styles */
+#icon-modal {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none;
+}
+
+#icon-modal.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#icon-modal-content {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0);
+}
+
+#icon-modal.visible #icon-modal-content {
+    transform: scale(1);
+}

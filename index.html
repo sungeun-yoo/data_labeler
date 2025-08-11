@@ -14,7 +14,7 @@
 
     <!-- 상단 툴박스 -->
     <header class="p-2 shadow-md flex-shrink-0 flex items-center gap-2" style="background-color: var(--md-sys-color-surface-container); border-bottom: 1px solid var(--md-sys-color-outline-variant);">
-        <img src="icon.svg" class="w-8 h-8 mx-2">
+        <img src="icon.svg" id="app-icon" class="w-8 h-8 mx-2 cursor-pointer">
         <div class="h-8 w-px" style="background-color: var(--md-sys-color-outline-variant);"></div>
         <input type="file" id="configLoader" accept=".json" class="hidden">
         <button id="btnLoadConfig" class="btn btn-tonal">Config 열기</button>
@@ -155,5 +155,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script type="module" src="src/main.js"></script>
+
+    <!-- Icon Modal -->
+    <div id="icon-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background-color: rgba(0, 0, 0, 0.6);">
+        <img src="icon.svg" id="icon-modal-content" class="w-1/2 h-1/2" style="max-width: 512px; max-height: 512px;">
+    </div>
 </body>
 </html>
