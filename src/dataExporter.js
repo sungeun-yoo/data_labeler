@@ -98,20 +98,19 @@ export function exportAsCocoFormat() {
 }
 
 /**
- * Converts the annotation data for the current image to YOLO pose format.
- * Format per line: class_idx x_center y_center width height x1 y1 v1 x2 y2 v2 ...
- * All coordinates are normalized.
+ * Converts annotation data for a single image to YOLO pose format.
+ * @param {object} data - The annotation data for a single image, including objects and image dimensions.
+ * @returns {string} The YOLO formatted string. Returns an empty string if data is invalid.
  */
-export function exportAsYoloPose() {
-    const currentFile = state.imageFiles[state.currentImageIndex];
-    if (!currentFile) return '';
-
-    const data = state.annotationData[currentFile.name];
-    if (!data || !data.objects || data.objects.length === 0) return '';
+export function exportDataAsYoloPose(data) {
+    if (!data || !data.objects || data.objects.length === 0) {
+        return '';
+    }
 
     const { image_width: w, image_height: h } = data;
     if (!w || !h) {
-        return '오류: 이미지 크기 정보가 없어 YOLO 포맷을 생성할 수 없습니다.\n이미지를 다시 로드해 주세요.';
+        console.error("Image size information is missing for", data.image_path, "- cannot generate YOLO format.");
+        return ''; // Return empty string if image dimensions are missing
     }
 
     const classNames = Object.keys(state.config || {});
@@ -123,7 +122,13 @@ export function exportAsYoloPose() {
             return null;
         }
 
-        const [x1, y1, x2, y2] = obj.bbox;
+        // Normalize bbox coordinates to ensure [x_min, y_min, x_max, y_max]
+        const [x1_raw, y1_raw, x2_raw, y2_raw] = obj.bbox;
+        const x1 = Math.min(x1_raw, x2_raw);
+        const y1 = Math.min(y1_raw, y2_raw);
+        const x2 = Math.max(x1_raw, x2_raw);
+        const y2 = Math.max(y1_raw, y2_raw);
+
         const boxWidth = x2 - x1;
         const boxHeight = y2 - y1;
         const xCenter = x1 + boxWidth / 2;
@@ -140,7 +145,9 @@ export function exportAsYoloPose() {
         let keypointsStr = keypoints.map(p => {
             const normX = p.x / w;
             const normY = p.y / h;
-            return `${normX.toFixed(6)} ${normY.toFixed(6)} ${p.visible}`;
+            // Ensure visibility is an integer, defaulting to 0 if undefined
+            const visibility = p.visible !== undefined ? parseInt(p.visible, 10) : 0;
+            return `${normX.toFixed(6)} ${normY.toFixed(6)} ${visibility}`;
         }).join(' ');
 
         const numToPad = maxKeypoints - keypoints.length;
@@ -153,4 +160,25 @@ export function exportAsYoloPose() {
     }).filter(line => line !== null);
 
     return lines.join('\n');
+}
+
+
+/**
+ * Converts the annotation data for the current image to YOLO pose format for the UI viewer.
+ * Format per line: class_idx x_center y_center width height x1 y1 v1 x2 y2 v2 ...
+ * All coordinates are normalized.
+ */
+export function exportAsYoloPose() {
+    const currentFile = state.imageFiles[state.currentImageIndex];
+    if (!currentFile) return '';
+
+    const data = state.annotationData[currentFile.name];
+    if (!data) return ''; // No data for this file
+
+    // Provide a user-facing error in the UI if dimensions are missing
+    if (!data.image_width || !data.image_height) {
+        return '오류: 이미지 크기 정보가 없어 YOLO 포맷을 생성할 수 없습니다.\n이미지를 다시 로드해 주세요.';
+    }
+
+    return exportDataAsYoloPose(data);
 }
