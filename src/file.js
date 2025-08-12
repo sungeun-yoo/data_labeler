@@ -3,6 +3,7 @@ import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache }
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage } from './canvas.js';
 import { exportDataAsYoloPose } from './dataExporter.js';
+import { showSapiensResultModal } from './modal.js';
 
 function validateAndSetConfig(config, filename = 'default_config') {
     if (typeof config !== 'object' || config === null) {
@@ -190,6 +191,7 @@ export async function handleSapiensDirectorySelection(e) {
         const configLabels = state.config.person.labels;
 
         let loadedCount = 0;
+        let unmatchedCount = 0;
         // instance_info is an array of objects, but the user sample suggests it corresponds to annotations for one or more images.
         // The sample doesn't specify how to map instances to image files.
         // A common pattern is one JSON per image, or a single JSON with a field mapping to the image name.
@@ -232,16 +234,16 @@ export async function handleSapiensDirectorySelection(e) {
                     objects: objects,
                 });
                 loadedCount++;
+            } else {
+                unmatchedCount++;
             }
         }
 
+        showSapiensResultModal(loadedCount, unmatchedCount);
 
         if (loadedCount > 0) {
-            showNotification(`${loadedCount}개의 Sapiens 라벨 파일 로드 완료.`, 'success', ui);
             ui.btnLoadSapiensDir.textContent = 'Sapiens 로드됨';
             ui.btnLoadSapiensDir.classList.replace('btn-tonal', 'btn-success');
-        } else {
-             showNotification('일치하는 Sapiens 라벨 파일을 찾을 수 없습니다.', 'error', ui);
         }
 
         // Refresh the current image's annotation
