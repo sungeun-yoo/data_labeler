@@ -60,6 +60,7 @@
                 <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
                     <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">JSON</button>
                     <button id="btn-yolo-pose" class="btn btn-tonal flex-grow text-sm">YOLO</button>
+                    <button id="btn-mf-yolo-pose" class="btn btn-tonal flex-grow text-sm">MF_YOLO</button>
                 </div>
                 <div id="label-content-wrapper" class="flex-grow p-2 overflow-y-auto">
                     <div id="live-json-content" class="relative h-full">
@@ -75,6 +76,13 @@
                             <button id="btn-download-yolo" class="btn btn-icon btn-tonal"></button>
                         </div>
                         <pre><code id="yolo-pose-output" class="text-xs"></code></pre>
+                    </div>
+                    <div id="mf-yolo-pose-content" class="hidden relative h-full">
+                        <div class="absolute top-0 right-0 flex gap-1 z-10">
+                            <button id="btn-copy-mf-yolo" class="btn btn-icon btn-tonal"></button>
+                            <button id="btn-download-mf-yolo" class="btn btn-icon btn-tonal"></button>
+                        </div>
+                        <pre><code id="mf-yolo-pose-output" class="text-xs"></code></pre>
                     </div>
                 </div>
             </aside>

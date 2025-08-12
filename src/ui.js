@@ -3,7 +3,7 @@ import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
 import { setCustomColor } from './colorManager.js';
-import { exportAsLiveJson, exportAsYoloPose } from './dataExporter.js';
+import { exportAsLiveJson, exportAsYoloPose, exportAsMfYoloPose } from './dataExporter.js';
 
 export const ui = {};
 let tempShortcutConfig = {};
@@ -69,14 +69,19 @@ export function initUI() {
         // Label Viewer panel
         btnLiveJson: document.getElementById('btn-live-json'),
         btnYoloPose: document.getElementById('btn-yolo-pose'),
+        btnMfYoloPose: document.getElementById('btn-mf-yolo-pose'),
         liveJsonContent: document.getElementById('live-json-content'),
         yoloPoseContent: document.getElementById('yolo-pose-content'),
+        mfYoloPoseContent: document.getElementById('mf-yolo-pose-content'),
         liveJsonOutput: document.getElementById('live-json-output'),
         yoloPoseOutput: document.getElementById('yolo-pose-output'),
+        mfYoloPoseOutput: document.getElementById('mf-yolo-pose-output'),
         btnCopyLive: document.getElementById('btn-copy-live'),
         btnDownloadLive: document.getElementById('btn-download-live'),
         btnCopyYolo: document.getElementById('btn-copy-yolo'),
         btnDownloadYolo: document.getElementById('btn-download-yolo'),
+        btnCopyMfYolo: document.getElementById('btn-copy-mf-yolo'),
+        btnDownloadMfYolo: document.getElementById('btn-download-mf-yolo'),
 
         // Image List panel
         imageListContentWrapper: document.getElementById('image-list-content-wrapper'),
@@ -97,6 +102,8 @@ export function initUI() {
     ui.btnDownloadLive.innerHTML = downloadIcon;
     ui.btnCopyYolo.innerHTML = copyIcon;
     ui.btnDownloadYolo.innerHTML = downloadIcon;
+    ui.btnCopyMfYolo.innerHTML = copyIcon;
+    ui.btnDownloadMfYolo.innerHTML = downloadIcon;
 
     ui.btnPrev.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
@@ -524,10 +531,12 @@ export function switchLabelViewTab(tab) {
     // Hide all content panels by setting display to 'none'
     ui.liveJsonContent.style.display = 'none';
     ui.yoloPoseContent.style.display = 'none';
+    ui.mfYoloPoseContent.style.display = 'none';
 
     // Deactivate all tab buttons
     ui.btnLiveJson.classList.remove('active');
     ui.btnYoloPose.classList.remove('active');
+    ui.btnMfYoloPose.classList.remove('active');
 
     // Show the selected tab by setting display to 'flex' and activate the button
     if (tab === 'live') {
@@ -536,6 +545,9 @@ export function switchLabelViewTab(tab) {
     } else if (tab === 'yolo') {
         ui.yoloPoseContent.style.display = 'flex';
         ui.btnYoloPose.classList.add('active');
+    } else if (tab === 'mf_yolo') {
+        ui.mfYoloPoseContent.style.display = 'flex';
+        ui.btnMfYoloPose.classList.add('active');
     }
 }
 
@@ -543,11 +555,13 @@ export function updateLabelView() {
     if (state.currentImageIndex < 0) {
         ui.liveJsonOutput.textContent = '{}';
         ui.yoloPoseOutput.textContent = '';
+        ui.mfYoloPoseOutput.textContent = '';
         return;
     }
 
     ui.liveJsonOutput.textContent = exportAsLiveJson();
     ui.yoloPoseOutput.textContent = exportAsYoloPose();
+    ui.mfYoloPoseOutput.textContent = exportAsMfYoloPose();
 }
 
 

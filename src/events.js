@@ -177,6 +177,7 @@ export function initializeEventListeners() {
     // Label Viewer Panel
     ui.btnLiveJson.addEventListener('click', () => switchLabelViewTab('live'));
     ui.btnYoloPose.addEventListener('click', () => switchLabelViewTab('yolo'));
+    ui.btnMfYoloPose.addEventListener('click', () => switchLabelViewTab('mf_yolo'));
 
     ui.btnCopyLive.addEventListener('click', () => copyToClipboard(ui.liveJsonOutput.textContent, ui));
     ui.btnDownloadLive.addEventListener('click', () => {
@@ -188,6 +189,12 @@ export function initializeEventListeners() {
     ui.btnDownloadYolo.addEventListener('click', () => {
         const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".txt";
         downloadFile(ui.yoloPoseOutput.textContent, filename || 'annotation.txt');
+    });
+
+    ui.btnCopyMfYolo.addEventListener('click', () => copyToClipboard(ui.mfYoloPoseOutput.textContent, ui));
+    ui.btnDownloadMfYolo.addEventListener('click', () => {
+        const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + "_mf.txt";
+        downloadFile(ui.mfYoloPoseOutput.textContent, filename || 'annotation_mf.txt');
     });
 
     // Icon Modal
