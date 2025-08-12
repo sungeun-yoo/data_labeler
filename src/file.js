@@ -2,6 +2,7 @@ import * as state from './state.js';
 import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache } from './ui.js';
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage } from './canvas.js';
+import { exportDataAsYoloPose } from './dataExporter.js';
 
 function validateAndSetConfig(config, filename = 'default_config') {
     if (typeof config !== 'object' || config === null) {
@@ -204,8 +205,16 @@ export async function saveAllAnnotationsToZip() {
                 });
 
                 const jsonString = JSON.stringify(output, null, 2);
-                const jsonFilename = filename.replace(/\.[^/.]+$/, "") + ".json";
-                zip.file(jsonFilename, jsonString);
+                const baseFilename = filename.replace(/\.[^/.]+$/, "");
+
+                // Add JSON file
+                zip.file(`${baseFilename}.json`, jsonString);
+
+                // Add YOLO TXT file
+                const yoloString = exportDataAsYoloPose(output);
+                if (yoloString) {
+                    zip.file(`${baseFilename}.txt`, yoloString);
+                }
             }
         }
 
