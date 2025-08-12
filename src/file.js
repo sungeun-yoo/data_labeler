@@ -25,8 +25,7 @@ function validateAndSetConfig(config, filename = 'default_config') {
     state.appState.currentClass = classes[0];
     showNotification(`${filename} 로드 완료`, 'success', ui);
     ui.btnLoadImageDir.disabled = false;
-    ui.btnLoadLabelDir.disabled = false;
-    ui.btnLoadSapiensDir.disabled = false;
+    ui.btnOpenLabelModal.disabled = false;
     ui.btnLoadConfig.classList.replace('btn-tonal', 'btn-success');
     ui.btnLoadConfig.textContent = 'Config 로드됨';
     updateClassSelectorUI();
@@ -43,8 +42,7 @@ export async function handleConfigFile(e) {
     } catch (error) {
         state.setConfig(null);
         ui.btnLoadImageDir.disabled = true;
-        ui.btnLoadLabelDir.disabled = true;
-        ui.btnLoadSapiensDir.disabled = true;
+        ui.btnOpenLabelModal.disabled = true;
         ui.btnLoadConfig.classList.replace('btn-success', 'btn-tonal');
         ui.btnLoadConfig.textContent = 'Config 열기';
 
@@ -135,8 +133,8 @@ export async function handleLabelDirectorySelection(e) {
 
         if (loadedJsonCount > 0) {
             showNotification(`${loadedJsonCount}개의 라벨 파일 로드 완료.`, 'success', ui);
-            ui.btnLoadLabelDir.textContent = '라벨 로드됨';
-            ui.btnLoadLabelDir.classList.replace('btn-tonal', 'btn-success');
+            ui.btnOpenLabelModal.textContent = '라벨 로드됨';
+            ui.btnOpenLabelModal.classList.replace('btn-tonal', 'btn-success');
         }
         if (notFoundCount > 0) {
             showNotification(`이미지와 일치하는 ${notFoundCount}개의 라벨 파일을 찾을 수 없습니다.`, 'warning', ui);
@@ -242,8 +240,8 @@ export async function handleSapiensDirectorySelection(e) {
         showSapiensResultModal(loadedCount, unmatchedCount);
 
         if (loadedCount > 0) {
-            ui.btnLoadSapiensDir.textContent = 'Sapiens 로드됨';
-            ui.btnLoadSapiensDir.classList.replace('btn-tonal', 'btn-success');
+            ui.btnOpenLabelModal.textContent = '라벨 로드됨';
+            ui.btnOpenLabelModal.classList.replace('btn-tonal', 'btn-success');
         }
 
         // Refresh the current image's annotation

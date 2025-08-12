@@ -3,7 +3,7 @@ import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarU
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleImageDirectorySelection, handleLabelDirectorySelection, handleSapiensDirectorySelection } from './file.js';
-import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
+import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal, showLabelFormatModal } from './modal.js';
 import { getKeyToActionMap } from './shortcutManager.js';
 
 function updateCursor() {
@@ -30,10 +30,12 @@ export function initializeEventListeners() {
     ui.configLoader.addEventListener('change', handleConfigFile);
     ui.btnLoadImageDir.addEventListener('click', () => ui.imageDirLoader.click());
     ui.imageDirLoader.addEventListener('change', handleImageDirectorySelection);
-    ui.btnLoadLabelDir.addEventListener('click', () => ui.labelDirLoader.click());
+
+    // New unified label loader
+    ui.btnOpenLabelModal.addEventListener('click', showLabelFormatModal);
     ui.labelDirLoader.addEventListener('change', handleLabelDirectorySelection);
-    ui.btnLoadSapiensDir.addEventListener('click', () => ui.sapiensDirLoader.click());
     ui.sapiensDirLoader.addEventListener('change', handleSapiensDirectorySelection);
+
     ui.btnSave.addEventListener('click', saveAllAnnotationsToZip);
     ui.btnPrev.addEventListener('click', () => navigateImage(-1));
     ui.btnNext.addEventListener('click', () => navigateImage(1));
