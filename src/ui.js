@@ -3,7 +3,7 @@ import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
 import { setCustomColor } from './colorManager.js';
-import { exportAsCocoFormat, exportAsLiveJson, exportAsYoloPose } from './dataExporter.js';
+import { exportAsLiveJson, exportAsYoloPose } from './dataExporter.js';
 
 export const ui = {};
 let tempShortcutConfig = {};
@@ -14,8 +14,12 @@ export function initUI() {
         appIcon: document.getElementById('app-icon'),
         btnLoadConfig: document.getElementById('btnLoadConfig'),
         configLoader: document.getElementById('configLoader'),
-        btnLoadDir: document.getElementById('btnLoadDir'),
-        dirLoader: document.getElementById('dirLoader'),
+        btnLoadImageDir: document.getElementById('btnLoadImageDir'),
+        imageDirLoader: document.getElementById('imageDirLoader'),
+        btnLoadLabelDir: document.getElementById('btnLoadLabelDir'),
+        labelDirLoader: document.getElementById('labelDirLoader'),
+        btnLoadSapiensDir: document.getElementById('btnLoadSapiensDir'),
+        sapiensDirLoader: document.getElementById('sapiensDirLoader'),
         btnSave: document.getElementById('btnSave'),
         btnPrev: document.getElementById('btnPrev'),
         btnNext: document.getElementById('btnNext'),
@@ -65,18 +69,13 @@ export function initUI() {
 
         // Label Viewer panel
         btnLiveJson: document.getElementById('btn-live-json'),
-        btnCocoJson: document.getElementById('btn-coco-json'),
         btnYoloPose: document.getElementById('btn-yolo-pose'),
         liveJsonContent: document.getElementById('live-json-content'),
-        cocoJsonContent: document.getElementById('coco-json-content'),
         yoloPoseContent: document.getElementById('yolo-pose-content'),
         liveJsonOutput: document.getElementById('live-json-output'),
-        cocoJsonOutput: document.getElementById('coco-json-output'),
         yoloPoseOutput: document.getElementById('yolo-pose-output'),
         btnCopyLive: document.getElementById('btn-copy-live'),
         btnDownloadLive: document.getElementById('btn-download-live'),
-        btnCopyCoco: document.getElementById('btn-copy-coco'),
-        btnDownloadCoco: document.getElementById('btn-download-coco'),
         btnCopyYolo: document.getElementById('btn-copy-yolo'),
         btnDownloadYolo: document.getElementById('btn-download-yolo'),
 
@@ -97,8 +96,6 @@ export function initUI() {
 
     ui.btnCopyLive.innerHTML = copyIcon;
     ui.btnDownloadLive.innerHTML = downloadIcon;
-    ui.btnCopyCoco.innerHTML = copyIcon;
-    ui.btnDownloadCoco.innerHTML = downloadIcon;
     ui.btnCopyYolo.innerHTML = copyIcon;
     ui.btnDownloadYolo.innerHTML = downloadIcon;
 
@@ -527,21 +524,16 @@ export function updateImageListUI() {
 export function switchLabelViewTab(tab) {
     // Hide all content panels by setting display to 'none'
     ui.liveJsonContent.style.display = 'none';
-    ui.cocoJsonContent.style.display = 'none';
     ui.yoloPoseContent.style.display = 'none';
 
     // Deactivate all tab buttons
     ui.btnLiveJson.classList.remove('active');
-    ui.btnCocoJson.classList.remove('active');
     ui.btnYoloPose.classList.remove('active');
 
     // Show the selected tab by setting display to 'flex' and activate the button
     if (tab === 'live') {
         ui.liveJsonContent.style.display = 'flex';
         ui.btnLiveJson.classList.add('active');
-    } else if (tab === 'coco') {
-        ui.cocoJsonContent.style.display = 'flex';
-        ui.btnCocoJson.classList.add('active');
     } else if (tab === 'yolo') {
         ui.yoloPoseContent.style.display = 'flex';
         ui.btnYoloPose.classList.add('active');
@@ -551,13 +543,11 @@ export function switchLabelViewTab(tab) {
 export function updateLabelView() {
     if (state.currentImageIndex < 0) {
         ui.liveJsonOutput.textContent = '{}';
-        ui.cocoJsonOutput.textContent = '{}';
         ui.yoloPoseOutput.textContent = '';
         return;
     }
 
     ui.liveJsonOutput.textContent = exportAsLiveJson();
-    ui.cocoJsonOutput.textContent = exportAsCocoFormat();
     ui.yoloPoseOutput.textContent = exportAsYoloPose();
 }
 

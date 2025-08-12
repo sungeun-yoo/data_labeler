@@ -2,7 +2,7 @@ import * as state from './state.js';
 import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, switchSidebar, switchLabelViewTab, updateImageListUI } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
-import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleDirectorySelection } from './file.js';
+import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleImageDirectorySelection, handleLabelDirectorySelection, handleSapiensDirectorySelection } from './file.js';
 import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
 import { getKeyToActionMap } from './shortcutManager.js';
 
@@ -28,8 +28,12 @@ function updateCursor() {
 export function initializeEventListeners() {
     ui.btnLoadConfig.addEventListener('click', () => ui.configLoader.click());
     ui.configLoader.addEventListener('change', handleConfigFile);
-    ui.btnLoadDir.addEventListener('click', () => ui.dirLoader.click());
-    ui.dirLoader.addEventListener('change', handleDirectorySelection);
+    ui.btnLoadImageDir.addEventListener('click', () => ui.imageDirLoader.click());
+    ui.imageDirLoader.addEventListener('change', handleImageDirectorySelection);
+    ui.btnLoadLabelDir.addEventListener('click', () => ui.labelDirLoader.click());
+    ui.labelDirLoader.addEventListener('change', handleLabelDirectorySelection);
+    ui.btnLoadSapiensDir.addEventListener('click', () => ui.sapiensDirLoader.click());
+    ui.sapiensDirLoader.addEventListener('change', handleSapiensDirectorySelection);
     ui.btnSave.addEventListener('click', saveAllAnnotationsToZip);
     ui.btnPrev.addEventListener('click', () => navigateImage(-1));
     ui.btnNext.addEventListener('click', () => navigateImage(1));
@@ -170,7 +174,6 @@ export function initializeEventListeners() {
 
     // Label Viewer Panel
     ui.btnLiveJson.addEventListener('click', () => switchLabelViewTab('live'));
-    ui.btnCocoJson.addEventListener('click', () => switchLabelViewTab('coco'));
     ui.btnYoloPose.addEventListener('click', () => switchLabelViewTab('yolo'));
 
     ui.btnCopyLive.addEventListener('click', () => copyToClipboard(ui.liveJsonOutput.textContent, ui));
@@ -178,9 +181,6 @@ export function initializeEventListeners() {
         const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".json";
         downloadFile(ui.liveJsonOutput.textContent, filename || 'annotation.json');
     });
-
-    ui.btnCopyCoco.addEventListener('click', () => copyToClipboard(ui.cocoJsonOutput.textContent, ui));
-    ui.btnDownloadCoco.addEventListener('click', () => downloadFile(ui.cocoJsonOutput.textContent, 'coco_annotations.json'));
 
     ui.btnCopyYolo.addEventListener('click', () => copyToClipboard(ui.yoloPoseOutput.textContent, ui));
     ui.btnDownloadYolo.addEventListener('click', () => {
