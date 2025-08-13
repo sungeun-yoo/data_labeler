@@ -102,7 +102,7 @@ export function exportAsYoloPose() {
  * @param {object} data - The annotation data for a single image.
  * @returns {string} The MF_YOLO formatted string.
  */
-function exportDataAsMfYoloPose(data) {
+export function exportDataAsMfYoloPose(data) {
     if (!data || !data.objects || data.objects.length === 0) {
         return '';
     }

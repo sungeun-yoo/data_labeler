@@ -2,7 +2,7 @@ import * as state from './state.js';
 import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache } from './ui.js';
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage } from './canvas.js';
-import { exportDataAsYoloPose } from './dataExporter.js';
+import { exportDataAsYoloPose, exportDataAsMfYoloPose } from './dataExporter.js';
 import { showSapiensResultModal } from './modal.js';
 
 function validateAndSetConfig(config, filename = 'default_config') {
@@ -370,7 +370,7 @@ export async function saveAllAnnotationsToZip() {
                 zip.file(`${baseFilename}.json`, jsonString);
 
                 // Add YOLO TXT file
-                const yoloString = exportDataAsYoloPose(output);
+                const yoloString = exportDataAsMfYoloPose(output);
                 if (yoloString) {
                     zip.file(`${baseFilename}.txt`, yoloString);
                 }
