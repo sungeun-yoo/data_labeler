@@ -66,14 +66,19 @@ export async function handleImageDirectorySelection(e) {
             throw new Error('폴더에 지원하는 이미지 파일이 없습니다.');
         }
 
-        clearImageCache(); // Clear old image URLs before setting new files
+        clearImageCache();
         state.setImageFiles(imageFiles);
-        state.setAnnotationData({}); // 기존 데이터 초기화
+        state.setAnnotationData({});
 
-        for (const imageFile of imageFiles) {
-            const imageFilename = imageFile.name;
-            state.updateAnnotationData(imageFilename, { image_path: imageFilename, objects: [] });
-        }
+        // Initialize annotation data structure
+        imageFiles.forEach(file => {
+            state.updateAnnotationData(file.name, { image_path: file.name, objects: [] });
+        });
+
+        showNotification('이미지 크기 정보 로딩 중...', 'info', ui);
+
+        const dimensionPromises = imageFiles.map(file => getImageDimensions(file));
+        await Promise.all(dimensionPromises);
 
         ui.btnSave.disabled = false;
         ui.btnPrev.disabled = false;
@@ -84,7 +89,7 @@ export async function handleImageDirectorySelection(e) {
         ui.btnLoadImageDir.classList.replace('btn-tonal', 'btn-success');
 
         await navigateImage(0, true);
-        showNotification(`${state.imageFiles.length}개 이미지 로드됨`, 'success', ui);
+        showNotification(`${state.imageFiles.length}개 이미지 로드 완료`, 'success', ui);
 
     } catch (error) {
         showNotification(error.message, 'error', ui);
@@ -255,6 +260,24 @@ export async function handleSapiensDirectorySelection(e) {
     }
 }
 
+function getImageDimensions(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            if (state.annotationData[file.name]) {
+                state.annotationData[file.name].image_width = img.naturalWidth;
+                state.annotationData[file.name].image_height = img.naturalHeight;
+            }
+            URL.revokeObjectURL(img.src); // Clean up the object URL
+            resolve();
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(img.src); // Clean up on error too
+            reject(new Error(`이미지 파일의 크기를 읽는 데 실패했습니다: ${file.name}`));
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
 
 export async function navigateImage(direction, isInitialLoad = false) {
     const newIndex = isInitialLoad ? 0 : state.currentImageIndex + direction;
@@ -286,13 +309,6 @@ function loadAndDrawImage(index) {
         img.onload = async () => {
             try {
                 state.setCurrentImage(img);
-
-                // Save image dimensions to the annotation data
-                const imageFilename = state.imageFiles[index].name;
-                if (state.annotationData[imageFilename]) {
-                    state.annotationData[imageFilename].image_width = img.naturalWidth;
-                    state.annotationData[imageFilename].image_height = img.naturalHeight;
-                }
 
                 await loadAnnotationForImage(index);
                 handleResize();
