@@ -214,7 +214,12 @@ export async function handleSapiensDirectorySelection(e) {
                         if (sapiensIndex !== undefined && instance.keypoints[sapiensIndex]) {
                             const [x, y] = instance.keypoints[sapiensIndex];
                             const score = instance.keypoint_scores[sapiensIndex];
-                            const visible = score > 0.5 ? 2 : 0;
+                            let visible = 0;
+                            if (score > 0.5) {
+                                visible = 2;
+                            } else if (score > 0.3) {
+                                visible = 1;
+                            }
                             return { x, y, visible };
                         }
                         return { x: 0, y: 0, visible: 0 };
