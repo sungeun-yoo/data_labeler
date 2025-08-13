@@ -57,10 +57,12 @@ export function exportDataAsYoloPose(data) {
 
         const keypoints = obj.keypoints || [];
         let keypointsStr = keypoints.map(p => {
+            const visibility = p.visible !== undefined ? parseInt(p.visible, 10) : 0;
+            if (visibility === 0) {
+                return '0 0 0';
+            }
             const normX = p.x / w;
             const normY = p.y / h;
-            // Ensure visibility is an integer, defaulting to 0 if undefined
-            const visibility = p.visible !== undefined ? parseInt(p.visible, 10) : 0;
             return `${normX.toFixed(6)} ${normY.toFixed(6)} ${visibility}`;
         }).join(' ');
 
@@ -142,12 +144,12 @@ export function exportDataAsMfYoloPose(data) {
 
         const keypoints = obj.keypoints || [];
         let keypointsStr = keypoints.map(p => {
-            if (boxWidth <= 0 || boxHeight <= 0) {
-                return '0.000000 0.000000 0';
+            const visibility = p.visible !== undefined ? parseInt(p.visible, 10) : 0;
+            if (visibility === 0 || boxWidth <= 0 || boxHeight <= 0) {
+                return '0 0 0';
             }
             const normX = (p.x - x1) / boxWidth;
             const normY = (p.y - y1) / boxHeight;
-            const visibility = p.visible !== undefined ? parseInt(p.visible, 10) : 0;
 
             // Clamp coordinates to be within [0, 1] as per definition
             const clampedX = Math.max(0, Math.min(1, normX));
