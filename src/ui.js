@@ -3,7 +3,7 @@ import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
 import { setCustomColor } from './colorManager.js';
-import { exportAsCocoFormat, exportAsLiveJson, exportAsYoloPose } from './dataExporter.js';
+import { exportAsLiveJson, exportAsYoloPose, exportAsMfYoloPose } from './dataExporter.js';
 
 export const ui = {};
 let tempShortcutConfig = {};
@@ -14,8 +14,11 @@ export function initUI() {
         appIcon: document.getElementById('app-icon'),
         btnLoadConfig: document.getElementById('btnLoadConfig'),
         configLoader: document.getElementById('configLoader'),
-        btnLoadDir: document.getElementById('btnLoadDir'),
-        dirLoader: document.getElementById('dirLoader'),
+        btnLoadImageDir: document.getElementById('btnLoadImageDir'),
+        imageDirLoader: document.getElementById('imageDirLoader'),
+        labelDirLoader: document.getElementById('labelDirLoader'),
+        sapiensDirLoader: document.getElementById('sapiensDirLoader'),
+        btnOpenLabelModal: document.getElementById('btnOpenLabelModal'),
         btnSave: document.getElementById('btnSave'),
         btnPrev: document.getElementById('btnPrev'),
         btnNext: document.getElementById('btnNext'),
@@ -65,20 +68,20 @@ export function initUI() {
 
         // Label Viewer panel
         btnLiveJson: document.getElementById('btn-live-json'),
-        btnCocoJson: document.getElementById('btn-coco-json'),
         btnYoloPose: document.getElementById('btn-yolo-pose'),
+        btnMfYoloPose: document.getElementById('btn-mf-yolo-pose'),
         liveJsonContent: document.getElementById('live-json-content'),
-        cocoJsonContent: document.getElementById('coco-json-content'),
         yoloPoseContent: document.getElementById('yolo-pose-content'),
+        mfYoloPoseContent: document.getElementById('mf-yolo-pose-content'),
         liveJsonOutput: document.getElementById('live-json-output'),
-        cocoJsonOutput: document.getElementById('coco-json-output'),
         yoloPoseOutput: document.getElementById('yolo-pose-output'),
+        mfYoloPoseOutput: document.getElementById('mf-yolo-pose-output'),
         btnCopyLive: document.getElementById('btn-copy-live'),
         btnDownloadLive: document.getElementById('btn-download-live'),
-        btnCopyCoco: document.getElementById('btn-copy-coco'),
-        btnDownloadCoco: document.getElementById('btn-download-coco'),
         btnCopyYolo: document.getElementById('btn-copy-yolo'),
         btnDownloadYolo: document.getElementById('btn-download-yolo'),
+        btnCopyMfYolo: document.getElementById('btn-copy-mf-yolo'),
+        btnDownloadMfYolo: document.getElementById('btn-download-mf-yolo'),
 
         // Image List panel
         imageListContentWrapper: document.getElementById('image-list-content-wrapper'),
@@ -97,10 +100,10 @@ export function initUI() {
 
     ui.btnCopyLive.innerHTML = copyIcon;
     ui.btnDownloadLive.innerHTML = downloadIcon;
-    ui.btnCopyCoco.innerHTML = copyIcon;
-    ui.btnDownloadCoco.innerHTML = downloadIcon;
     ui.btnCopyYolo.innerHTML = copyIcon;
     ui.btnDownloadYolo.innerHTML = downloadIcon;
+    ui.btnCopyMfYolo.innerHTML = copyIcon;
+    ui.btnDownloadMfYolo.innerHTML = downloadIcon;
 
     ui.btnPrev.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
@@ -527,38 +530,38 @@ export function updateImageListUI() {
 export function switchLabelViewTab(tab) {
     // Hide all content panels by setting display to 'none'
     ui.liveJsonContent.style.display = 'none';
-    ui.cocoJsonContent.style.display = 'none';
     ui.yoloPoseContent.style.display = 'none';
+    ui.mfYoloPoseContent.style.display = 'none';
 
     // Deactivate all tab buttons
     ui.btnLiveJson.classList.remove('active');
-    ui.btnCocoJson.classList.remove('active');
     ui.btnYoloPose.classList.remove('active');
+    ui.btnMfYoloPose.classList.remove('active');
 
     // Show the selected tab by setting display to 'flex' and activate the button
     if (tab === 'live') {
         ui.liveJsonContent.style.display = 'flex';
         ui.btnLiveJson.classList.add('active');
-    } else if (tab === 'coco') {
-        ui.cocoJsonContent.style.display = 'flex';
-        ui.btnCocoJson.classList.add('active');
     } else if (tab === 'yolo') {
         ui.yoloPoseContent.style.display = 'flex';
         ui.btnYoloPose.classList.add('active');
+    } else if (tab === 'mf_yolo') {
+        ui.mfYoloPoseContent.style.display = 'flex';
+        ui.btnMfYoloPose.classList.add('active');
     }
 }
 
 export function updateLabelView() {
     if (state.currentImageIndex < 0) {
         ui.liveJsonOutput.textContent = '{}';
-        ui.cocoJsonOutput.textContent = '{}';
         ui.yoloPoseOutput.textContent = '';
+        ui.mfYoloPoseOutput.textContent = '';
         return;
     }
 
     ui.liveJsonOutput.textContent = exportAsLiveJson();
-    ui.cocoJsonOutput.textContent = exportAsCocoFormat();
     ui.yoloPoseOutput.textContent = exportAsYoloPose();
+    ui.mfYoloPoseOutput.textContent = exportAsMfYoloPose();
 }
 
 

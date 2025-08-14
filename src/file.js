@@ -2,7 +2,8 @@ import * as state from './state.js';
 import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache } from './ui.js';
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage } from './canvas.js';
-import { exportDataAsYoloPose } from './dataExporter.js';
+import { exportDataAsYoloPose, exportDataAsMfYoloPose } from './dataExporter.js';
+import { showSapiensResultModal } from './modal.js';
 
 function validateAndSetConfig(config, filename = 'default_config') {
     if (typeof config !== 'object' || config === null) {
@@ -23,7 +24,8 @@ function validateAndSetConfig(config, filename = 'default_config') {
     state.setConfig(config);
     state.appState.currentClass = classes[0];
     showNotification(`${filename} 로드 완료`, 'success', ui);
-    ui.btnLoadDir.disabled = false;
+    ui.btnLoadImageDir.disabled = false;
+    ui.btnOpenLabelModal.disabled = false;
     ui.btnLoadConfig.classList.replace('btn-tonal', 'btn-success');
     ui.btnLoadConfig.textContent = 'Config 로드됨';
     updateClassSelectorUI();
@@ -39,7 +41,8 @@ export async function handleConfigFile(e) {
         validateAndSetConfig(parsedConfig, file.name);
     } catch (error) {
         state.setConfig(null);
-        ui.btnLoadDir.disabled = true;
+        ui.btnLoadImageDir.disabled = true;
+        ui.btnOpenLabelModal.disabled = true;
         ui.btnLoadConfig.classList.replace('btn-success', 'btn-tonal');
         ui.btnLoadConfig.textContent = 'Config 열기';
 
@@ -52,25 +55,70 @@ export async function handleConfigFile(e) {
     }
 }
 
-export async function handleDirectorySelection(e) {
+export async function handleImageDirectorySelection(e) {
     showNotification('이미지 폴더를 읽는 중...', 'info', ui);
     ui.canvasLoader.style.display = 'flex';
     try {
         const files = Array.from(e.target.files);
         const imageFiles = files.filter(f => /\.(png|jpe?g)$/i.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
-        const jsonFiles = files.filter(f => /\.json$/i.test(f.name));
-        const jsonFileMap = new Map(jsonFiles.map(f => [f.name.replace(/\.json$/i, ''), f]));
 
         if (imageFiles.length === 0) {
             throw new Error('폴더에 지원하는 이미지 파일이 없습니다.');
         }
 
-        clearImageCache(); // Clear old image URLs before setting new files
+        clearImageCache();
         state.setImageFiles(imageFiles);
-        state.setAnnotationData({}); // 기존 데이터 초기화
+        state.setAnnotationData({});
+
+        // Initialize annotation data structure
+        imageFiles.forEach(file => {
+            state.updateAnnotationData(file.name, { image_path: file.name, objects: [] });
+        });
+
+        showNotification('이미지 크기 정보 로딩 중...', 'info', ui);
+
+        const dimensionPromises = imageFiles.map(file => getImageDimensions(file));
+        await Promise.all(dimensionPromises);
+
+        ui.btnSave.disabled = false;
+        ui.btnPrev.disabled = false;
+        ui.btnNext.disabled = false;
+        ui.btnAddObject.disabled = false;
+
+        ui.btnLoadImageDir.textContent = '폴더 로드됨';
+        ui.btnLoadImageDir.classList.replace('btn-tonal', 'btn-success');
+
+        await navigateImage(0, true);
+        showNotification(`${state.imageFiles.length}개 이미지 로드 완료`, 'success', ui);
+
+    } catch (error) {
+        showNotification(error.message, 'error', ui);
+        state.setImageFiles([]);
+        state.setAnnotationData({});
+        ui.btnLoadImageDir.textContent = '이미지 폴더 열기';
+        ui.btnLoadImageDir.classList.replace('btn-success', 'btn-tonal');
+    } finally {
+        updateHelpUI();
+        ui.canvasLoader.style.display = 'none';
+        e.target.value = '';
+    }
+}
+
+export async function handleLabelDirectorySelection(e) {
+    if (state.imageFiles.length === 0) {
+        showNotification('먼저 이미지 폴더를 로드해주세요.', 'error', ui);
+        return;
+    }
+
+    showNotification('라벨 폴더를 읽는 중...', 'info', ui);
+    try {
+        const files = Array.from(e.target.files);
+        const jsonFiles = files.filter(f => /\.json$/i.test(f.name));
+        const jsonFileMap = new Map(jsonFiles.map(f => [f.name.replace(/\.json$/i, ''), f]));
 
         let loadedJsonCount = 0;
-        for (const imageFile of imageFiles) {
+        let notFoundCount = 0;
+        for (const imageFile of state.imageFiles) {
             const imageName = imageFile.name.replace(/\.[^/.]+$/, "");
             const jsonFile = jsonFileMap.get(imageName);
             const imageFilename = imageFile.name;
@@ -81,36 +129,159 @@ export async function handleDirectorySelection(e) {
                     state.updateAnnotationData(imageFilename, data);
                     loadedJsonCount++;
                 } catch (err) {
-                    showNotification(`${jsonFile.name} 파싱 오류. 새로 시작합니다.`, 'error', ui);
-                    state.updateAnnotationData(imageFilename, { image_path: imageFilename, objects: [] });
+                    showNotification(`${jsonFile.name} 파싱 오류.`, 'error', ui);
                 }
             } else {
-                state.updateAnnotationData(imageFilename, { image_path: imageFilename, objects: [] });
+                notFoundCount++;
             }
         }
 
-        ui.btnSave.disabled = false;
-        ui.btnPrev.disabled = false;
-        ui.btnNext.disabled = false;
-        ui.btnAddObject.disabled = false;
+        if (loadedJsonCount > 0) {
+            showNotification(`${loadedJsonCount}개의 라벨 파일 로드 완료.`, 'success', ui);
+            ui.btnOpenLabelModal.textContent = '라벨 로드됨';
+            ui.btnOpenLabelModal.classList.replace('btn-tonal', 'btn-success');
+        }
+        if (notFoundCount > 0) {
+            showNotification(`이미지와 일치하는 ${notFoundCount}개의 라벨 파일을 찾을 수 없습니다.`, 'warning', ui);
+        }
+        if (loadedJsonCount === 0 && notFoundCount > 0) {
+            showNotification('일치하는 라벨 파일을 찾을 수 없습니다.', 'error', ui);
+        }
 
-        ui.btnLoadDir.textContent = '폴더 로드됨';
-        ui.btnLoadDir.classList.replace('btn-tonal', 'btn-success');
-
-        await navigateImage(0, true);
-        showNotification(`${state.imageFiles.length}개 이미지, ${loadedJsonCount}개 JSON 로드됨`, 'success', ui);
+        // Refresh the current image's annotation
+        await navigateImage(0);
 
     } catch (error) {
-        showNotification(error.message, 'error', ui);
-        state.setImageFiles([]);
-        state.setAnnotationData({});
-        ui.btnLoadDir.textContent = '이미지 폴더 열기';
-        ui.btnLoadDir.classList.replace('btn-success', 'btn-tonal');
+        showNotification(`라벨 로딩 오류: ${error.message}`, 'error', ui);
     } finally {
-        updateHelpUI();
-        ui.canvasLoader.style.display = 'none';
         e.target.value = '';
     }
+}
+
+export async function handleSapiensDirectorySelection(e) {
+    if (state.imageFiles.length === 0) {
+        showNotification('먼저 이미지 폴더를 로드해주세요.', 'error', ui);
+        return;
+    }
+    if (!state.config.person) {
+        showNotification('Sapiens 포맷을 처리하려면 "person" 클래스 설정이 필요합니다.', 'error', ui);
+        return;
+    }
+
+    showNotification('Sapiens 라벨 폴더를 읽는 중...', 'info', ui);
+    try {
+        const files = Array.from(e.target.files);
+        const jsonFiles = files.filter(f => /\.json$/i.test(f.name));
+
+        if (jsonFiles.length === 0) {
+            throw new Error('폴더에 JSON 파일이 없습니다.');
+        }
+
+        // Sapiens 포맷은 파일 이름 매칭이 아니라, 폴더 내 모든 json을 합치는 방식일 수 있음.
+        // 여기서는 첫번째 json 파일 하나만 처리하는 것으로 가정.
+        // 만약 여러 파일이라면, 이미지 파일 이름과 매칭되는 로직 필요.
+        // 우선은 하나의 파일에 모든 이미지 데이터가 있다고 가정.
+        const sapiensFile = jsonFiles[0];
+
+        const fileContent = await sapiensFile.text();
+        const data = JSON.parse(fileContent);
+
+        if (!data.instance_info || !data.meta_info) {
+            throw new Error('Sapiens 포맷이 아닙니다. "instance_info" 또는 "meta_info" 속성이 없습니다.');
+        }
+
+        const keypointName2Id = data.meta_info.keypoint_name2id;
+        const configLabels = state.config.person.labels;
+
+        let loadedCount = 0;
+        let unmatchedCount = 0;
+        // instance_info is an array of objects, but the user sample suggests it corresponds to annotations for one or more images.
+        // The sample doesn't specify how to map instances to image files.
+        // A common pattern is one JSON per image, or a single JSON with a field mapping to the image name.
+        // Let's assume for now one JSON file per image, named identically.
+
+        const jsonFileMap = new Map(jsonFiles.map(f => [f.name.replace(/\.json$/i, ''), f]));
+
+        for (const imageFile of state.imageFiles) {
+            const imageNameWithoutExt = imageFile.name.replace(/\.[^/.]+$/, "");
+            const jsonFile = jsonFileMap.get(imageNameWithoutExt);
+
+            if(jsonFile) {
+                const sapiensData = JSON.parse(await jsonFile.text());
+                const objects = sapiensData.instance_info.map(instance => {
+                    const keypoints = configLabels.map(labelName => {
+                        const sapiensIndex = keypointName2Id[labelName];
+                        if (sapiensIndex !== undefined && instance.keypoints[sapiensIndex]) {
+                            const [x, y] = instance.keypoints[sapiensIndex];
+                            const score = instance.keypoint_scores[sapiensIndex];
+                            let visible = 0;
+                            if (score > 0.5) {
+                                visible = 2;
+                            } else if (score > 0.3) {
+                                visible = 1;
+                            }
+                            return { x, y, visible };
+                        }
+                        return { x: 0, y: 0, visible: 0 };
+                    });
+
+                    const bbox = instance.bbox && instance.bbox.length > 0 ? instance.bbox[0] : [0,0,0,0];
+
+                    return {
+                        className: 'person',
+                        bbox: bbox,
+                        keypoints: keypoints,
+                        hidden: false,
+                    };
+                });
+
+                state.updateAnnotationData(imageFile.name, {
+                    image_path: imageFile.name,
+                    image_width: state.annotationData[imageFile.name]?.image_width,
+                    image_height: state.annotationData[imageFile.name]?.image_height,
+                    objects: objects,
+                });
+                loadedCount++;
+            } else {
+                unmatchedCount++;
+            }
+        }
+
+        showSapiensResultModal(loadedCount, unmatchedCount);
+
+        if (loadedCount > 0) {
+            ui.btnOpenLabelModal.textContent = '라벨 로드됨';
+            ui.btnOpenLabelModal.classList.replace('btn-tonal', 'btn-success');
+        }
+
+        // Refresh the current image's annotation
+        await navigateImage(0);
+
+    } catch (error) {
+        showNotification(`Sapiens 라벨 로딩 오류: ${error.message}`, 'error', ui);
+        console.error(error);
+    } finally {
+        e.target.value = '';
+    }
+}
+
+function getImageDimensions(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            if (state.annotationData[file.name]) {
+                state.annotationData[file.name].image_width = img.naturalWidth;
+                state.annotationData[file.name].image_height = img.naturalHeight;
+            }
+            URL.revokeObjectURL(img.src); // Clean up the object URL
+            resolve();
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(img.src); // Clean up on error too
+            reject(new Error(`이미지 파일의 크기를 읽는 데 실패했습니다: ${file.name}`));
+        };
+        img.src = URL.createObjectURL(file);
+    });
 }
 
 export async function navigateImage(direction, isInitialLoad = false) {
@@ -143,13 +314,6 @@ function loadAndDrawImage(index) {
         img.onload = async () => {
             try {
                 state.setCurrentImage(img);
-
-                // Save image dimensions to the annotation data
-                const imageFilename = state.imageFiles[index].name;
-                if (state.annotationData[imageFilename]) {
-                    state.annotationData[imageFilename].image_width = img.naturalWidth;
-                    state.annotationData[imageFilename].image_height = img.naturalHeight;
-                }
 
                 await loadAnnotationForImage(index);
                 handleResize();
@@ -211,7 +375,7 @@ export async function saveAllAnnotationsToZip() {
                 zip.file(`${baseFilename}.json`, jsonString);
 
                 // Add YOLO TXT file
-                const yoloString = exportDataAsYoloPose(output);
+                const yoloString = exportDataAsMfYoloPose(output);
                 if (yoloString) {
                     zip.file(`${baseFilename}.txt`, yoloString);
                 }

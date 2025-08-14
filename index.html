@@ -19,8 +19,12 @@
         <input type="file" id="configLoader" accept=".json" class="hidden">
         <button id="btnLoadConfig" class="btn btn-tonal">Config 열기</button>
         
-        <input type="file" id="dirLoader" webkitdirectory multiple class="hidden">
-        <button id="btnLoadDir" class="btn btn-tonal" disabled>이미지 폴더 열기</button>
+        <input type="file" id="imageDirLoader" webkitdirectory multiple class="hidden">
+        <button id="btnLoadImageDir" class="btn btn-tonal" disabled>이미지 폴더 열기</button>
+
+        <input type="file" id="labelDirLoader" webkitdirectory multiple class="hidden">
+        <input type="file" id="sapiensDirLoader" webkitdirectory multiple class="hidden">
+        <button id="btnOpenLabelModal" class="btn btn-tonal" disabled>라벨 폴더 열기</button>
 
         <button id="btnSave" class="btn btn-filled" disabled>전체 JSON 저장 (ZIP)</button>
         
@@ -55,8 +59,8 @@
                 </div>
                 <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
                     <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">JSON</button>
-                    <button id="btn-coco-json" class="btn btn-tonal flex-grow text-sm">COCO</button>
                     <button id="btn-yolo-pose" class="btn btn-tonal flex-grow text-sm">YOLO</button>
+                    <button id="btn-mf-yolo-pose" class="btn btn-tonal flex-grow text-sm">MF_YOLO</button>
                 </div>
                 <div id="label-content-wrapper" class="flex-grow p-2 overflow-y-auto">
                     <div id="live-json-content" class="relative h-full">
@@ -66,19 +70,19 @@
                         </div>
                         <pre><code id="live-json-output" class="text-xs">{}</code></pre>
                     </div>
-                    <div id="coco-json-content" class="hidden relative h-full">
-                        <div class="absolute top-0 right-0 flex gap-1 z-10">
-                            <button id="btn-copy-coco" class="btn btn-icon btn-tonal"></button>
-                            <button id="btn-download-coco" class="btn btn-icon btn-tonal"></button>
-                        </div>
-                        <pre><code id="coco-json-output" class="text-xs">{}</code></pre>
-                    </div>
                     <div id="yolo-pose-content" class="hidden relative h-full">
                         <div class="absolute top-0 right-0 flex gap-1 z-10">
                             <button id="btn-copy-yolo" class="btn btn-icon btn-tonal"></button>
                             <button id="btn-download-yolo" class="btn btn-icon btn-tonal"></button>
                         </div>
                         <pre><code id="yolo-pose-output" class="text-xs"></code></pre>
+                    </div>
+                    <div id="mf-yolo-pose-content" class="hidden relative h-full">
+                        <div class="absolute top-0 right-0 flex gap-1 z-10">
+                            <button id="btn-copy-mf-yolo" class="btn btn-icon btn-tonal"></button>
+                            <button id="btn-download-mf-yolo" class="btn btn-icon btn-tonal"></button>
+                        </div>
+                        <pre><code id="mf-yolo-pose-output" class="text-xs"></code></pre>
                     </div>
                 </div>
             </aside>
