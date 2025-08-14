@@ -188,13 +188,13 @@ export function initializeEventListeners() {
     ui.btnCopyYolo.addEventListener('click', () => copyToClipboard(ui.yoloPoseOutput.textContent, ui));
     ui.btnDownloadYolo.addEventListener('click', () => {
         const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".txt";
-        downloadFile(ui.yoloPoseOutput.textContent, filename || 'annotation.txt');
+        downloadFile(ui.yoloPoseOutput.textContent, filename || 'annotation.txt', 'text/plain');
     });
 
     ui.btnCopyMfYolo.addEventListener('click', () => copyToClipboard(ui.mfYoloPoseOutput.textContent, ui));
     ui.btnDownloadMfYolo.addEventListener('click', () => {
         const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + "_mf.txt";
-        downloadFile(ui.mfYoloPoseOutput.textContent, filename || 'annotation_mf.txt');
+        downloadFile(ui.mfYoloPoseOutput.textContent, filename || 'annotation_mf.txt', 'text/plain');
     });
 
     // Icon Modal
@@ -277,6 +277,7 @@ function handleMouseDown(e) {
     }
 
     for (let i = objects.length - 1; i >= 0; i--) {
+        if (objects[i].hidden) continue;
         if (isPointInBbox(worldPos, objects[i].bbox)) {
             if (state.appState.selectedObjectIndex !== i) {
                 selectObject(i);

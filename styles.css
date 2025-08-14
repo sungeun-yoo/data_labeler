@@ -360,15 +360,14 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Image List Specific Styles */
 #image-list-content-wrapper {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(var(--thumbnail-size, 100px), 1fr));
-    gap: 8px;
-    align-content: start;
+    display: block;
+    text-align: center; /* Center the inline-block items */
 }
 
 #image-list-content-wrapper.list-view {
     display: flex;
     flex-direction: column;
+    text-align: left; /* Reset text alignment for list view */
 }
 
 .image-list-item {
@@ -380,6 +379,13 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .image-list-item.selected {
     border-color: var(--md-sys-color-primary);
+}
+
+#image-list-content-wrapper:not(.list-view) .image-list-item {
+    display: inline-block;
+    width: var(--thumbnail-size, 100px);
+    margin: 4px;
+    vertical-align: top;
 }
 
 .image-list-item img {
@@ -408,11 +414,11 @@ input[type=number] { -moz-appearance: textfield; }
     align-items: center;
     gap: 8px;
     padding: 4px;
-    height: 50px; /* Fixed height for list items */
+    min-height: calc(var(--thumbnail-size, 100px) * 0.4 + 30px);
 }
 .image-list-item.list-view-item img {
-    width: 40px;
-    height: 40px;
+    width: calc(var(--thumbnail-size, 100px) * 0.4 + 20px);
+    height: calc(var(--thumbnail-size, 100px) * 0.4 + 20px);
     flex-shrink: 0;
     border-radius: 4px;
 }
