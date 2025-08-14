@@ -456,26 +456,46 @@ export function updateImageListUI() {
             if (isListView) item.classList.add('list-view-item');
             item.dataset.imageIndex = index;
 
-            let imageUrl = imageUrlCache.get(file.name);
-            if (!imageUrl) {
-                imageUrl = URL.createObjectURL(file);
-                imageUrlCache.set(file.name, imageUrl);
-            }
             const img = document.createElement('img');
-            img.src = imageUrl;
+            // Use a 1x1 transparent pixel as a placeholder to maintain layout
+            img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+            img.dataset.filename = file.name;
+            img.classList.add('lazy-load-thumbnail');
             item.appendChild(img);
 
             // Create the correct container for info
             const infoContainer = document.createElement('div');
             if (!isListView) {
-                // For icon view, we need two containers
-                infoContainer.className = 'icon-view-status-container'; // A wrapper for both status and info
+                infoContainer.className = 'icon-view-status-container';
             } else {
                 infoContainer.className = 'info';
             }
             item.appendChild(infoContainer);
             wrapper.appendChild(item);
         });
+
+        const lazyImages = wrapper.querySelectorAll('.lazy-load-thumbnail');
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const filename = img.dataset.filename;
+                    const file = state.imageFiles.find(f => f.name === filename);
+                    if (file) {
+                        let imageUrl = imageUrlCache.get(filename);
+                        if (!imageUrl) {
+                            imageUrl = URL.createObjectURL(file);
+                            imageUrlCache.set(filename, imageUrl);
+                        }
+                        img.src = imageUrl;
+                        img.classList.remove('lazy-load-thumbnail');
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        }, { root: wrapper, rootMargin: '200px' }); // Pre-load images 200px before they are visible
+
+        lazyImages.forEach(img => imageObserver.observe(img));
     }
 
     // Now, update the state of the existing (or newly created) items
