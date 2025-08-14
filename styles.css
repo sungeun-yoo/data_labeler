@@ -360,13 +360,14 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Image List Specific Styles */
 #image-list-content-wrapper {
-    /* The display property is now handled by the .list-view class toggle. */
-    /* Default will be block, allowing inline-block children to wrap. */
+    display: block;
+    text-align: center; /* Center the inline-block items */
 }
 
 #image-list-content-wrapper.list-view {
     display: flex;
     flex-direction: column;
+    text-align: left; /* Reset text alignment for list view */
 }
 
 .image-list-item {
