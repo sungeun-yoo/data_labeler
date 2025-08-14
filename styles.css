@@ -360,10 +360,10 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Image List Specific Styles */
 #image-list-content-wrapper {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(var(--thumbnail-size, 100px), 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
-    align-content: start;
+    align-content: flex-start;
 }
 
 #image-list-content-wrapper.list-view {
@@ -380,6 +380,10 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .image-list-item.selected {
     border-color: var(--md-sys-color-primary);
+}
+
+#image-list-content-wrapper:not(.list-view) .image-list-item {
+    width: var(--thumbnail-size, 100px);
 }
 
 .image-list-item img {
