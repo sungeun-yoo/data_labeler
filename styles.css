@@ -414,11 +414,11 @@ input[type=number] { -moz-appearance: textfield; }
     align-items: center;
     gap: 8px;
     padding: 4px;
-    height: 50px; /* Fixed height for list items */
+    min-height: calc(var(--thumbnail-size, 100px) * 0.4 + 30px);
 }
 .image-list-item.list-view-item img {
-    width: 40px;
-    height: 40px;
+    width: calc(var(--thumbnail-size, 100px) * 0.4 + 20px);
+    height: calc(var(--thumbnail-size, 100px) * 0.4 + 20px);
     flex-shrink: 0;
     border-radius: 4px;
 }
