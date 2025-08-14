@@ -360,10 +360,8 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Image List Specific Styles */
 #image-list-content-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-content: flex-start;
+    /* The display property is now handled by the .list-view class toggle. */
+    /* Default will be block, allowing inline-block children to wrap. */
 }
 
 #image-list-content-wrapper.list-view {
@@ -383,7 +381,10 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 #image-list-content-wrapper:not(.list-view) .image-list-item {
+    display: inline-block;
     width: var(--thumbnail-size, 100px);
+    margin: 4px;
+    vertical-align: top;
 }
 
 .image-list-item img {
