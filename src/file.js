@@ -82,7 +82,6 @@ export async function handleImageDirectorySelection(e) {
         for (const file of imageFiles) {
             await getImageDimensions(file);
             count++;
-            console.log(`[${count}/${total}] Processing: ${file.name}`);
             showNotification(`이미지 로딩: ${count}/${total}`, 'info', ui);
         }
 
