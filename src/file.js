@@ -77,8 +77,14 @@ export async function handleImageDirectorySelection(e) {
 
         showNotification('이미지 크기 정보 로딩 중...', 'info', ui);
 
-        const dimensionPromises = imageFiles.map(file => getImageDimensions(file));
-        await Promise.all(dimensionPromises);
+        let count = 0;
+        const total = imageFiles.length;
+        for (const file of imageFiles) {
+            await getImageDimensions(file);
+            count++;
+            console.log(`[${count}/${total}] Processing: ${file.name}`);
+            showNotification(`이미지 로딩: ${count}/${total}`, 'info', ui);
+        }
 
         ui.btnSave.disabled = false;
         ui.btnPrev.disabled = false;
