@@ -1,5 +1,5 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache } from './ui.js';
+import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI } from './ui.js';
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage } from './canvas.js';
 import { exportDataAsYoloPose, exportDataAsMfYoloPose } from './dataExporter.js';
@@ -66,7 +66,6 @@ export async function handleImageDirectorySelection(e) {
             throw new Error('폴더에 지원하는 이미지 파일이 없습니다.');
         }
 
-        clearImageCache();
         state.setImageFiles(imageFiles);
         state.setAnnotationData({});
 

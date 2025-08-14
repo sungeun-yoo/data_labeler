@@ -1,5 +1,5 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, switchSidebar, switchLabelViewTab, updateImageListUI } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, switchSidebar, switchLabelViewTab, updateImageListUI, updateVirtualScroll } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
 import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleImageDirectorySelection, handleLabelDirectorySelection, handleSapiensDirectorySelection } from './file.js';
@@ -172,6 +172,8 @@ export function initializeEventListeners() {
     ui.thumbnailSizeSlider.addEventListener('input', (e) => {
         ui.imageListContentWrapper.style.setProperty('--thumbnail-size', `${e.target.value}px`);
     });
+
+    ui.imageListContentWrapper.addEventListener('scroll', handleVirtualScroll);
 
 
     // Label Viewer Panel
@@ -607,5 +609,18 @@ function undo() {
         updateCursor();
     } else {
         showNotification('더 이상 취소할 내용이 없습니다.', 'info', ui);
+    }
+}
+
+let isScrolling = false;
+function handleVirtualScroll() {
+    state.virtualScrollState.scrollTop = ui.imageListContentWrapper.scrollTop;
+
+    if (!isScrolling) {
+        window.requestAnimationFrame(() => {
+            updateVirtualScroll();
+            isScrolling = false;
+        });
+        isScrolling = true;
     }
 }
