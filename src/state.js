@@ -8,18 +8,6 @@ export let annotationData = {};
 export let history = [];
 export let currentHistoryIndex = -1;
 
-export const virtualScrollState = {
-    // The start and end index of the items to be rendered
-    renderStartIndex: 0,
-    renderEndIndex: 0,
-    // The estimated height of a single item in the list (can be updated dynamically)
-    itemHeight: 110, // Default for icon view: 100px thumbnail + margin
-    // The total height of the scrollable content, used to set the spacer height
-    totalHeight: 0,
-    // The current scroll position of the container
-    scrollTop: 0
-};
-
 export const appState = {
     mode: 'IDLE', // IDLE, DRAWING_BBOX, EDITING_POSE
     selectedObjectIndex: -1,

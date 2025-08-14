@@ -1,5 +1,4 @@
 import * as state from './state.js';
-import { virtualScrollState } from './state.js';
 import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
@@ -394,6 +393,12 @@ export function updateDetailsPanelUI() {
 }
 
 let activeSidebar = null; // Can be 'label' or 'image'
+const imageUrlCache = new Map();
+
+export function clearImageCache() {
+    imageUrlCache.forEach(url => URL.revokeObjectURL(url));
+    imageUrlCache.clear();
+}
 
 export function switchSidebar(sidebarName) {
     const isAlreadyOpen = activeSidebar === sidebarName;
@@ -430,127 +435,71 @@ export function switchSidebar(sidebarName) {
     }
 }
 
-// --- Virtual Scroll Implementation ---
+export function updateImageListUI() {
+    const wrapper = ui.imageListContentWrapper;
+    const items = wrapper.children;
+    const isListView = wrapper.classList.contains('list-view');
 
-const OVERSCAN_COUNT = 10; // Number of items to render above and below the viewport
-let itemContainer = null;
+    // If DOM items don't match data, or if view mode has changed, rebuild everything
+    if (items.length !== state.imageFiles.length ||
+        (items.length > 0 && items[0].classList.contains('list-view-item') !== isListView)) {
 
-function getItemHeight() {
-    const isListView = ui.imageListContentWrapper.classList.contains('list-view');
-    const thumbSize = parseInt(ui.thumbnailSizeSlider.value);
+        wrapper.innerHTML = ''; // Clear previous items
+        if (state.imageFiles.length === 0) {
+            wrapper.innerHTML = `<p class="text-gray-500 text-center col-span-full">이미지가 없습니다.</p>`;
+            return;
+        }
 
-    if (isListView) {
-        // Corresponds to the formula in styles.css: image height + padding
-        return (thumbSize * 0.4 + 20) + 10;
-    } else {
-        // Corresponds to the icon view item size: image height + margin
-        return thumbSize + 8;
-    }
-}
-
-export function initVirtualScroll() {
-    if (state.imageFiles.length === 0) return;
-
-    // Clear previous content and create containers
-    ui.imageListContentWrapper.innerHTML = '';
-    const spacer = document.createElement('div');
-    spacer.id = 'virtual-scroll-spacer';
-    itemContainer = document.createElement('div');
-    itemContainer.id = 'virtual-scroll-item-container';
-
-    ui.imageListContentWrapper.appendChild(spacer);
-    ui.imageListContentWrapper.appendChild(itemContainer);
-
-    // Reset scroll position
-    ui.imageListContentWrapper.scrollTop = 0;
-    state.virtualScrollState.scrollTop = 0;
-
-    // Calculate and set dimensions
-    const itemHeight = getItemHeight();
-    state.virtualScrollState.itemHeight = itemHeight;
-    state.virtualScrollState.totalHeight = state.imageFiles.length * itemHeight;
-    spacer.style.height = `${state.virtualScrollState.totalHeight}px`;
-
-    // Initial render
-    updateVirtualScroll();
-}
-
-export function updateVirtualScroll() {
-    if (!itemContainer) return;
-
-    const { scrollTop, itemHeight } = state.virtualScrollState;
-    const containerHeight = ui.imageListContentWrapper.clientHeight;
-    const totalFiles = state.imageFiles.length;
-
-    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - OVERSCAN_COUNT);
-    const endIndex = Math.min(totalFiles - 1, Math.ceil((scrollTop + containerHeight) / itemHeight) + OVERSCAN_COUNT);
-
-    state.virtualScrollState.renderStartIndex = startIndex;
-    state.virtualScrollState.renderEndIndex = endIndex;
-
-    renderVisibleImageListItems();
-}
-
-function renderVisibleImageListItems() {
-    const { renderStartIndex, renderEndIndex, itemHeight } = state.virtualScrollState;
-
-    // Position the item container
-    itemContainer.style.transform = `translateY(${renderStartIndex * itemHeight}px)`;
-
-    const visibleFiles = state.imageFiles.slice(renderStartIndex, renderEndIndex + 1);
-    const isListView = ui.imageListContentWrapper.classList.contains('list-view');
-
-    // --- DOM recycling ---
-    const existingItems = Array.from(itemContainer.children);
-    const newItems = [];
-
-    visibleFiles.forEach((file, i) => {
-        const itemIndex = renderStartIndex + i;
-        let item = existingItems.find(el => el.dataset.recycled === 'true');
-
-        if (item) {
-            item.dataset.recycled = 'false';
-        } else {
-            item = document.createElement('div');
+        state.imageFiles.forEach((file, index) => {
+            const item = document.createElement('div');
             item.className = 'image-list-item';
-            // Create img and info container only once
+            if (isListView) item.classList.add('list-view-item');
+            item.dataset.imageIndex = index;
+
+            let imageUrl = imageUrlCache.get(file.name);
+            if (!imageUrl) {
+                imageUrl = URL.createObjectURL(file);
+                imageUrlCache.set(file.name, imageUrl);
+            }
             const img = document.createElement('img');
-            const infoContainer = document.createElement('div');
+            img.src = imageUrl;
             item.appendChild(img);
+
+            // Create the correct container for info
+            const infoContainer = document.createElement('div');
+            if (!isListView) {
+                // For icon view, we need two containers
+                infoContainer.className = 'icon-view-status-container'; // A wrapper for both status and info
+            } else {
+                infoContainer.className = 'info';
+            }
             item.appendChild(infoContainer);
-        }
+            wrapper.appendChild(item);
+        });
+    }
 
-        // --- Update item content and style ---
-        item.classList.toggle('list-view-item', isListView);
-        item.dataset.imageIndex = itemIndex;
-        item.classList.toggle('selected', itemIndex === state.currentImageIndex);
+    // Now, update the state of the existing (or newly created) items
+    Array.from(items).forEach((item, index) => {
+        const file = state.imageFiles[index];
+        const annotation = state.annotationData[file.name] || { objects: [] };
+        const objectCount = annotation.objects.length;
+        const isCompleted = objectCount > 0;
 
-        const img = item.querySelector('img');
-        const infoContainer = item.querySelector('div:last-child');
+        // Update selection
+        item.classList.toggle('selected', index === state.currentImageIndex);
 
-        // Manage Object URLs for memory efficiency
-        const currentUrl = img.src;
-        const newUrl = URL.createObjectURL(file);
-        if (currentUrl && currentUrl.startsWith('blob:')) {
-            URL.revokeObjectURL(currentUrl);
-        }
-        img.src = newUrl;
-
+        // Update content (only if it needs to be changed)
         let newContent;
+        const infoContainer = item.querySelector('.info, .icon-view-status-container');
+
+
         if (isListView) {
-            infoContainer.className = 'info';
-            const annotation = state.annotationData[file.name] || { objects: [] };
-            const objectCount = annotation.objects.length;
-            const isCompleted = objectCount > 0;
             const statusIconHTML = isCompleted
                 ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
                 : '<span class="status-icon"></span>';
-            newContent = `<span class="filename" title="${file.name}">${itemIndex + 1}. ${file.name}</span><span class="status">${statusIconHTML}<span>obj ${objectCount}</span></span>`;
+
+            newContent = `<span class="filename" title="${file.name}">${index + 1}. ${file.name}</span><span class="status">${statusIconHTML}<span>obj ${objectCount}</span></span>`;
         } else {
-            infoContainer.className = 'icon-view-status-container';
-             const annotation = state.annotationData[file.name] || { objects: [] };
-             const objectCount = annotation.objects.length;
-             const isCompleted = objectCount > 0;
              const statusIconHTML = isCompleted
                 ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
                 : '';
@@ -558,49 +507,22 @@ function renderVisibleImageListItems() {
             const statusHTML = `<div class="icon-view-status">${statusIconHTML}${objCountText}</div>`;
             newContent = `${statusHTML}<div class="info">${file.name}</div>`;
         }
-        infoContainer.innerHTML = newContent;
-        newItems.push(item);
-    });
 
-    // Mark unused DOM nodes for recycling
-    existingItems.forEach(item => {
-        if (!newItems.includes(item)) {
-            item.dataset.recycled = 'true';
+        // Only update innerHTML if it has actually changed to prevent flicker
+        if (infoContainer && infoContainer.innerHTML !== newContent) {
+            infoContainer.innerHTML = newContent;
         }
     });
 
-    // Append new items if necessary
-    newItems.forEach(item => {
-        if (!item.parentElement) {
-            itemContainer.appendChild(item);
-        }
-    });
 
-    // Remove recycled nodes from DOM
-    itemContainer.querySelectorAll('[data-recycled="true"]').forEach(node => {
-        const img = node.querySelector('img');
-        if (img && img.src.startsWith('blob:')) {
-            URL.revokeObjectURL(img.src);
+    // Scroll to the selected item if it's not already visible
+    const selectedItem = wrapper.querySelector('.selected');
+    if (selectedItem) {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const itemRect = selectedItem.getBoundingClientRect();
+        if (itemRect.top < wrapperRect.top || itemRect.bottom > wrapperRect.bottom) {
+            selectedItem.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }
-        node.remove();
-    });
-}
-
-
-// This function is now a trigger for the virtual scroller
-export function updateImageListUI() {
-    if (state.imageFiles.length > 0 && !itemContainer) {
-        initVirtualScroll();
-    } else if (itemContainer) {
-        // This handles view mode changes or other updates
-        const newHeight = getItemHeight();
-        if (newHeight !== state.virtualScrollState.itemHeight) {
-            initVirtualScroll(); // Re-initialize if item heights change
-        } else {
-            renderVisibleImageListItems(); // Just re-render the visible items
-        }
-    } else {
-        ui.imageListContentWrapper.innerHTML = `<p class="text-gray-500 text-center col-span-full">이미지가 없습니다.</p>`;
     }
 }
 
