@@ -24,6 +24,7 @@ export const appState = {
     isAltDown: false,
     isCtrlDown: false,
     currentClass: null,
+    gamma: 1.0,
 };
 
 export let transform = { scale: 1, offsetX: 0, offsetY: 0 };

@@ -89,6 +89,10 @@ export function initializeEventListeners() {
                 // Temporarily select the object to delete, as deleteSelectedObject depends on it
                 state.appState.selectedObjectIndex = objectId;
                 deleteSelectedObject();
+            } else if (action === 'toggle-lock') {
+                object.locked = !object.locked;
+                // No history push for this, as it's a UI state toggle
+                updateAllUI(); // Udpate lock icon
             }
         } else {
             selectObject(objectId);
@@ -395,7 +399,8 @@ function handleMouseUp(e) {
                     id: `obj_${Date.now()}`,
                     className: newClass,
                     bbox: normalizedBbox,
-                    keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
+                    keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 })),
+                    locked: false
                 };
                 state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
                 newObjectIndex = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.length - 1;

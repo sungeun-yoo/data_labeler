@@ -1,7 +1,7 @@
 import * as state from './state.js';
 import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache } from './ui.js';
 import { showNotification } from './utils.js';
-import { handleResize, redrawCanvas, centerImage } from './canvas.js';
+import { handleResize, redrawCanvas, centerImage, clearGammaCache } from './canvas.js';
 import { exportDataAsYoloPose, exportDataAsMfYoloPose } from './dataExporter.js';
 import { showSapiensResultModal } from './modal.js';
 
@@ -293,12 +293,41 @@ export async function navigateImage(direction, isInitialLoad = false) {
     const newIndex = isInitialLoad ? 0 : state.currentImageIndex + direction;
     if (newIndex < 0 || newIndex >= state.imageFiles.length) return;
 
+    // 1. Get locked objects from the current frame BEFORE navigating
+    let lockedObjects = [];
+    if (state.currentImageIndex !== -1 && direction > 0) { // Only carry forward
+        const currentImageName = state.imageFiles[state.currentImageIndex].name;
+        const currentAnnotations = state.annotationData[currentImageName];
+        if (currentAnnotations && currentAnnotations.objects) {
+            lockedObjects = currentAnnotations.objects
+                .filter(obj => obj.locked)
+                .map(obj => JSON.parse(JSON.stringify(obj))); // Deep copy
+        }
+    }
+
     ui.canvasLoader.style.display = 'flex';
     try {
         const doNavigation = async () => {
             state.setCurrentImageIndex(newIndex);
             state.resetAppState();
             await loadAndDrawImage(newIndex);
+
+            // 3. Merge locked objects into the new frame's annotations
+            if (lockedObjects.length > 0) {
+                const newImageName = state.imageFiles[newIndex].name;
+                const newAnnotations = state.annotationData[newImageName];
+
+                lockedObjects.forEach(lockedObj => {
+                    // Give it a new unique ID
+                    lockedObj.id = `obj_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+                    newAnnotations.objects.push(lockedObj);
+                });
+
+                // Update history with the merged state
+                state.pushHistory(JSON.parse(JSON.stringify(newAnnotations.objects)));
+                updateAllUI();
+                redrawCanvas();
+            }
         };
 
         if (state.hasChanges() && !isInitialLoad) await doNavigation();
@@ -319,6 +348,7 @@ function loadAndDrawImage(index) {
         img.onload = async () => {
             try {
                 state.setCurrentImage(img);
+                clearGammaCache(); // Clear gamma cache for new image
 
                 await loadAnnotationForImage(index);
                 handleResize();

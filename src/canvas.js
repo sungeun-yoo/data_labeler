@@ -2,6 +2,50 @@ import * as state from './state.js';
 import { ui } from './ui.js';
 import { getColorForClass } from './utils.js';
 
+let gammaCorrectedImageCache = null;
+
+export function clearGammaCache() {
+    gammaCorrectedImageCache = null;
+}
+
+function applyGammaAndDraw() {
+    const image = state.currentImage;
+    const gamma = state.appState.gamma;
+    const ctx = ui.ctx;
+
+    if (gamma === 1.0) {
+        gammaCorrectedImageCache = null; // Clear cache if gamma is default
+        ctx.drawImage(image, 0, 0);
+        return;
+    }
+
+    if (gammaCorrectedImageCache) {
+        ctx.drawImage(gammaCorrectedImageCache, 0, 0);
+        return;
+    }
+
+    const offscreenCanvas = document.createElement('canvas');
+    const offscreenCtx = offscreenCanvas.getContext('2d');
+    offscreenCanvas.width = image.naturalWidth;
+    offscreenCanvas.height = image.naturalHeight;
+
+    offscreenCtx.drawImage(image, 0, 0);
+    const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    const data = imageData.data;
+    const invGamma = 1 / gamma;
+
+    for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.pow(data[i] / 255, invGamma) * 255;
+        data[i + 1] = Math.pow(data[i + 1] / 255, invGamma) * 255;
+        data[i + 2] = Math.pow(data[i + 2] / 255, invGamma) * 255;
+    }
+    offscreenCtx.putImageData(imageData, 0, 0);
+
+    gammaCorrectedImageCache = offscreenCanvas;
+    ctx.drawImage(gammaCorrectedImageCache, 0, 0);
+}
+
+
 export function handleResize() {
     if (!ui.canvasWrapper) return;
     const rect = ui.canvasWrapper.getBoundingClientRect();
@@ -23,7 +67,7 @@ export function redrawCanvas() {
     ctx.translate(state.transform.offsetX, state.transform.offsetY);
     ctx.scale(state.transform.scale, state.transform.scale);
 
-    ctx.drawImage(state.currentImage, 0, 0);
+    applyGammaAndDraw();
 
     if (state.appState.lastMouseWorldPos && !state.appState.isPanning) {
         drawGuideLines(state.appState.lastMouseWorldPos);
