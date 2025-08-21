@@ -12,15 +12,34 @@ export function showSaveOptionsModal(emptyFileCount) {
             <p class="text-sm mb-4" style="color: var(--md-sys-color-on-surface-variant);">
                 객체가 없는 라벨 파일이 ${emptyFileCount}개 있습니다. 이 파일들을 어떻게 처리할까요?
             </p>
-            <div class="space-y-2 mb-6">
-                <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
-                    <input type="radio" name="save-option" value="include" class="form-radio" checked>
-                    <span class="ml-3 text-sm">객체가 없는 라벨도 저장</span>
-                </label>
-                <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
-                    <input type="radio" name="save-option" value="exclude" class="form-radio">
-                    <span class="ml-3 text-sm">객체가 없는 라벨은 파일 생성 안 함</span>
-                </label>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <p class="text-sm font-medium mb-2">빈 라벨 파일 처리</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                            <input type="radio" name="empty-file-option" value="include" class="form-radio" checked>
+                            <span class="ml-3 text-sm">객체가 없는 라벨도 저장</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                            <input type="radio" name="empty-file-option" value="exclude" class="form-radio">
+                            <span class="ml-3 text-sm">객체가 없는 라벨은 파일 생성 안 함</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 my-4"></div>
+                <div>
+                    <p class="text-sm font-medium mb-2">텍스트 포맷 선택</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                            <input type="radio" name="text-format-option" value="mf_yolo" class="form-radio" checked>
+                            <span class="ml-3 text-sm">MF_YOLO</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                            <input type="radio" name="text-format-option" value="yolo" class="form-radio">
+                            <span class="ml-3 text-sm">YOLO</span>
+                        </label>
+                    </div>
+                </div>
             </div>
             <div class="flex justify-end gap-4">
                 <button id="btnSaveOptionsCancel" class="btn btn-tonal">취소</button>
@@ -32,9 +51,12 @@ export function showSaveOptionsModal(emptyFileCount) {
 
     const confirmButton = document.getElementById('btnSaveOptionsConfirm');
     confirmButton.addEventListener('click', () => {
-        const selectedOption = document.querySelector('input[name="save-option"]:checked').value;
+        const includeEmpty = document.querySelector('input[name="empty-file-option"]:checked').value === 'include';
+        const textFormat = document.querySelector('input[name="text-format-option"]:checked').value;
+
         const options = {
-            includeEmpty: selectedOption === 'include'
+            includeEmpty: includeEmpty,
+            textFormat: textFormat
         };
         proceedWithZipCreation(options);
         hideSaveOptionsModal();

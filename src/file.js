@@ -367,7 +367,7 @@ export async function saveAllAnnotationsToZip() {
     }
 }
 
-export async function proceedWithZipCreation(options = { includeEmpty: true }) {
+export async function proceedWithZipCreation(options = { includeEmpty: true, textFormat: 'mf_yolo' }) {
     showNotification('ZIP 파일 생성 중...', 'info', ui);
 
     try {
@@ -406,10 +406,16 @@ export async function proceedWithZipCreation(options = { includeEmpty: true }) {
                 // Add JSON file
                 zip.file(`${baseFilename}.json`, jsonString);
 
-                // Add YOLO TXT file
-                const yoloString = exportDataAsMfYoloPose(output);
-                if (yoloString) {
-                    zip.file(`${baseFilename}.txt`, yoloString);
+                // Add selected TXT file
+                let txtString = '';
+                if (options.textFormat === 'yolo') {
+                    txtString = exportDataAsYoloPose(output);
+                } else { // Default to mf_yolo
+                    txtString = exportDataAsMfYoloPose(output);
+                }
+
+                if (txtString) {
+                    zip.file(`${baseFilename}.txt`, txtString);
                 }
             }
         }
