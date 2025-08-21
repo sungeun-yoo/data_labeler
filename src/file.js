@@ -3,7 +3,7 @@ import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache }
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage, clearGammaCache } from './canvas.js';
 import { exportDataAsYoloPose, exportDataAsMfYoloPose } from './dataExporter.js';
-import { showSapiensResultModal } from './modal.js';
+import { showSapiensResultModal, showSaveOptionsModal } from './modal.js';
 
 function validateAndSetConfig(config, filename = 'default_config') {
     if (typeof config !== 'object' || config === null) {
@@ -357,14 +357,40 @@ export async function saveAllAnnotationsToZip() {
         return;
     }
 
+    const emptyFileCount = Object.values(state.annotationData).filter(data => data.objects.length === 0).length;
+
+    if (emptyFileCount > 0) {
+        showSaveOptionsModal(emptyFileCount);
+    } else {
+        // If no empty files, proceed directly
+        proceedWithZipCreation({ includeEmpty: true });
+    }
+}
+
+export async function proceedWithZipCreation(options = { includeEmpty: true }) {
     showNotification('ZIP 파일 생성 중...', 'info', ui);
 
     try {
         const zip = new JSZip();
+        let dataToSave = state.annotationData;
 
-        for (const filename in state.annotationData) {
-            if (Object.prototype.hasOwnProperty.call(state.annotationData, filename)) {
-                const output = state.annotationData[filename];
+        if (!options.includeEmpty) {
+            dataToSave = Object.entries(state.annotationData)
+                .filter(([, data]) => data.objects.length > 0)
+                .reduce((acc, [key, val]) => {
+                    acc[key] = val;
+                    return acc;
+                }, {});
+        }
+
+        if (Object.keys(dataToSave).length === 0) {
+            showNotification('저장할 라벨이 없습니다.', 'info', ui);
+            return;
+        }
+
+        for (const filename in dataToSave) {
+            if (Object.prototype.hasOwnProperty.call(dataToSave, filename)) {
+                const output = dataToSave[filename];
 
                 // BBox 좌표 정규화
                 output.objects.forEach(obj => {

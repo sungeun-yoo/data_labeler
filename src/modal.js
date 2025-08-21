@@ -1,5 +1,53 @@
 import { performDeleteObject } from "./events.js";
 import { ui } from "./ui.js";
+import { proceedWithZipCreation } from "./file.js";
+
+export function showSaveOptionsModal(emptyFileCount) {
+    const modal = document.createElement('div');
+    modal.id = 'saveOptionsModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="p-6 rounded-2xl shadow-xl w-full max-w-md" style="background-color: var(--md-sys-color-surface-container-high);">
+            <h3 class="text-lg font-bold mb-2">저장 옵션</h3>
+            <p class="text-sm mb-4" style="color: var(--md-sys-color-on-surface-variant);">
+                객체가 없는 라벨 파일이 ${emptyFileCount}개 있습니다. 이 파일들을 어떻게 처리할까요?
+            </p>
+            <div class="space-y-2 mb-6">
+                <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                    <input type="radio" name="save-option" value="include" class="form-radio" checked>
+                    <span class="ml-3 text-sm">객체가 없는 라벨도 저장</span>
+                </label>
+                <label class="flex items-center p-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                    <input type="radio" name="save-option" value="exclude" class="form-radio">
+                    <span class="ml-3 text-sm">객체가 없는 라벨은 파일 생성 안 함</span>
+                </label>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="btnSaveOptionsCancel" class="btn btn-tonal">취소</button>
+                <button id="btnSaveOptionsConfirm" class="btn btn-filled">확인</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    const confirmButton = document.getElementById('btnSaveOptionsConfirm');
+    confirmButton.addEventListener('click', () => {
+        const selectedOption = document.querySelector('input[name="save-option"]:checked').value;
+        const options = {
+            includeEmpty: selectedOption === 'include'
+        };
+        proceedWithZipCreation(options);
+        hideSaveOptionsModal();
+    });
+
+    document.getElementById('btnSaveOptionsCancel').addEventListener('click', hideSaveOptionsModal);
+    confirmButton.focus();
+}
+
+export function hideSaveOptionsModal() {
+    const modal = document.getElementById('saveOptionsModal');
+    if (modal) modal.remove();
+}
 
 export function showLabelFormatModal() {
     const modal = document.createElement('div');
@@ -98,5 +146,6 @@ export function hideDeleteConfirmModal() {
 export function isModalOpen() {
     return !!document.getElementById('deleteConfirmModal') ||
            !!document.getElementById('sapiensResultModal') ||
-           !!document.getElementById('labelFormatModal');
+           !!document.getElementById('labelFormatModal') ||
+           !!document.getElementById('saveOptionsModal');
 }
