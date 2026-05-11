@@ -110,7 +110,12 @@ export async function handleLabelDirectorySelection(e) {
     showNotification('라벨 폴더를 읽는 중...', 'info', ui);
     try {
         const files = Array.from(e.target.files);
-        const jsonFiles = files.filter(f => /\.json$/i.test(f.name));
+        const allJsonFiles = files.filter(f => /\.json$/i.test(f.name));
+
+        // annotations/json/ 서브폴더 구조 감지 (저장된 ZIP을 풀었을 때)
+        const jsonSubfolderFiles = allJsonFiles.filter(f => /\/json\//i.test(f.webkitRelativePath));
+        const jsonFiles = jsonSubfolderFiles.length > 0 ? jsonSubfolderFiles : allJsonFiles;
+
         const jsonFileMap = new Map(jsonFiles.map(f => [f.name.replace(/\.json$/i, ''), f]));
 
         let loadedJsonCount = 0;
@@ -260,13 +265,13 @@ export async function saveAllAnnotationsToZip() {
 
                 const baseFilename = filename.replace(/\.[^/.]+$/, "");
 
-                // JSON
-                zip.file(`${baseFilename}.json`, JSON.stringify(output, null, 2));
+                // JSON (항상 저장)
+                zip.file(`json/${baseFilename}.json`, JSON.stringify(output, null, 2));
 
-                // YOLO detection TXT
+                // YOLO detection TXT (라벨 있는 경우만)
                 const yoloString = exportDataAsYoloDetection(output);
                 if (yoloString) {
-                    zip.file(`${baseFilename}.txt`, yoloString);
+                    zip.file(`labels/${baseFilename}.txt`, yoloString);
                 }
             }
         }
