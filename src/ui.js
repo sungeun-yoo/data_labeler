@@ -578,6 +578,7 @@ export function updateBboxInfoUI(obj) {
             state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
             const coordIndex = parseInt(e.target.dataset.coord);
             obj.bbox[coordIndex] = parseFloat(e.target.value);
+            state.markDirty();
             redrawCanvas();
         });
     });

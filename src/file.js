@@ -1,7 +1,7 @@
 import * as state from './state.js';
 import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache } from './ui.js';
 import { showNotification } from './utils.js';
-import { handleResize, redrawCanvas, centerImage } from './canvas.js';
+import { handleResize } from './canvas.js';
 import { exportDataAsYoloDetection } from './dataExporter.js';
 
 function validateAndSetConfig(config, filename = 'default_config') {
@@ -86,6 +86,7 @@ export async function handleImageDirectorySelection(e) {
         ui.btnLoadImageDir.classList.replace('btn-tonal', 'btn-success');
 
         await navigateImage(0, true);
+        state.markClean();
         showNotification(`${state.imageFiles.length}개 이미지 로드 완료`, 'success', ui);
 
     } catch (error) {
@@ -135,7 +136,14 @@ export async function handleLabelDirectorySelection(e) {
                             return rest;
                         });
                     }
-                    state.updateAnnotationData(imageFilename, data);
+                    // 기존 image_width/height(이미지 로드 시점에 채워진 값)를 보존하며 머지
+                    const existing = state.annotationData[imageFilename] || {};
+                    state.updateAnnotationData(imageFilename, {
+                        ...existing,
+                        ...data,
+                        image_width: data.image_width || existing.image_width,
+                        image_height: data.image_height || existing.image_height,
+                    });
                     loadedJsonCount++;
                 } catch (err) {
                     showNotification(`${jsonFile.name} 파싱 오류.`, 'error', ui);
@@ -158,6 +166,7 @@ export async function handleLabelDirectorySelection(e) {
         }
 
         await navigateImage(0);
+        state.markClean();
 
     } catch (error) {
         showNotification(`라벨 로딩 오류: ${error.message}`, 'error', ui);
@@ -185,24 +194,23 @@ function getImageDimensions(file) {
     });
 }
 
+let isNavigating = false;
 export async function navigateImage(direction, isInitialLoad = false) {
+    if (isNavigating) return;
     const newIndex = isInitialLoad ? 0 : state.currentImageIndex + direction;
     if (newIndex < 0 || newIndex >= state.imageFiles.length) return;
 
+    isNavigating = true;
     ui.canvasLoader.style.display = 'flex';
     try {
-        const doNavigation = async () => {
-            state.setCurrentImageIndex(newIndex);
-            state.resetAppState();
-            await loadAndDrawImage(newIndex);
-        };
-
-        if (state.hasChanges() && !isInitialLoad) await doNavigation();
-        else await doNavigation();
+        state.setCurrentImageIndex(newIndex);
+        state.resetAppState();
+        await loadAndDrawImage(newIndex);
     } catch (error) {
         showNotification(error.message, 'error', ui);
     } finally {
         ui.canvasLoader.style.display = 'none';
+        isNavigating = false;
     }
 }
 
@@ -215,6 +223,12 @@ function loadAndDrawImage(index) {
         img.onload = async () => {
             try {
                 state.setCurrentImage(img);
+                // 라벨 로드 등으로 사이즈 메타가 비어있을 경우 보정
+                const existing = state.annotationData[file.name];
+                if (existing && (!existing.image_width || !existing.image_height)) {
+                    existing.image_width = img.naturalWidth;
+                    existing.image_height = img.naturalHeight;
+                }
                 await loadAnnotationForImage(index);
                 handleResize();
                 updateAllUI();
@@ -253,15 +267,18 @@ export async function saveAllAnnotationsToZip() {
 
         for (const filename in state.annotationData) {
             if (Object.prototype.hasOwnProperty.call(state.annotationData, filename)) {
-                const output = state.annotationData[filename];
+                // 메모리 데이터를 변형하지 않도록 deep clone 후 직렬화
+                const output = JSON.parse(JSON.stringify(state.annotationData[filename]));
 
-                // BBox 좌표 정규화
-                output.objects.forEach(obj => {
-                    if (obj.bbox) {
-                        const [x1, y1, x2, y2] = obj.bbox;
-                        obj.bbox = [Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2)];
-                    }
-                });
+                // BBox 좌표 정규화 (top-left, bottom-right 순서)
+                if (Array.isArray(output.objects)) {
+                    output.objects.forEach(obj => {
+                        if (obj.bbox) {
+                            const [x1, y1, x2, y2] = obj.bbox;
+                            obj.bbox = [Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2)];
+                        }
+                    });
+                }
 
                 const baseFilename = filename.replace(/\.[^/.]+$/, "");
 
@@ -284,6 +301,7 @@ export async function saveAllAnnotationsToZip() {
         a.click();
         URL.revokeObjectURL(a.href);
 
+        state.markClean();
         showNotification('모든 파일이 ZIP으로 저장되었습니다.', 'success', ui);
     } catch (error) {
         showNotification(`ZIP 생성 오류: ${error.message}`, 'error', ui);

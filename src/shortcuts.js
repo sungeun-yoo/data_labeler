@@ -9,7 +9,7 @@ export const shortcuts = {
     'backspace': 'DELETE_OBJECT',
     'escape': 'CANCEL_ACTION',
     'z': 'UNDO',
-    's_modifier': 'SAVE', // Ctrl/Meta + S
+    's': 'SAVE', // Ctrl/Meta + S (modifier required, handled in events.js)
 };
 
 export const numberShortcuts = {

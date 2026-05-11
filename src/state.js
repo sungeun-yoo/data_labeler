@@ -7,6 +7,7 @@ export let currentImage = null;
 export let annotationData = {};
 export let history = [];
 export let currentHistoryIndex = -1;
+let isDirty = false;
 
 export const appState = {
     mode: 'IDLE', // IDLE, DRAWING_BBOX
@@ -81,7 +82,15 @@ export function canUndo() {
 }
 
 export function hasChanges() {
-    return history.length > 1;
+    return isDirty;
+}
+
+export function markDirty() {
+    isDirty = true;
+}
+
+export function markClean() {
+    isDirty = false;
 }
 
 export function resetAppState() {

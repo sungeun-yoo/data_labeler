@@ -45,7 +45,7 @@ export function initializeEventListeners() {
     ui.canvas.addEventListener('mousemove', handleMouseMove);
     ui.canvas.addEventListener('mouseup', handleMouseUp);
     ui.canvas.addEventListener('mouseout', handleMouseUp);
-    ui.canvas.addEventListener('wheel', handleWheelZoom);
+    ui.canvas.addEventListener('wheel', handleWheelZoom, { passive: false });
     ui.canvas.addEventListener('contextmenu', e => e.preventDefault());
 
     window.addEventListener('keydown', handleKeyDown);
@@ -76,6 +76,7 @@ export function initializeEventListeners() {
             if (action === 'toggle-visibility') {
                 state.pushHistory(JSON.parse(JSON.stringify(objects)));
                 object.hidden = !object.hidden;
+                state.markDirty();
                 updateAllUI();
                 redrawCanvas();
             } else if (action === 'delete-object') {
@@ -213,6 +214,7 @@ function handleMouseDown(e) {
         const handle = getResizeHandleAt(worldPos, selectedObject.bbox, state.transform);
         if (handle) {
             state.pushHistory(JSON.parse(JSON.stringify(objects)));
+            state.markDirty();
             state.appState.isResizingBbox = true;
             state.appState.resizeHandle = handle;
             return;
@@ -244,6 +246,7 @@ function changeObjectClass(newClassName) {
 
     const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
     obj.className = newClassName;
+    state.markDirty();
 
     updateAllUI();
     redrawCanvas();
@@ -329,6 +332,7 @@ function handleMouseUp(e) {
             state.appState.mode = 'IDLE';
             selectObject(newObjectIndex);
             state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
+            state.markDirty();
             updateAllUI();
         }
 
@@ -346,7 +350,9 @@ function handleMouseUp(e) {
 }
 
 async function handleKeyDown(e) {
-    if (e.repeat || e.target.tagName === 'INPUT') return;
+    if (e.repeat) return;
+    const tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
     if (isModalOpen() || ui.shortcutModal.classList.contains('hidden') === false) {
         if (e.key === 'Escape') {
             hideDeleteConfirmModal();
@@ -459,6 +465,7 @@ export function deleteSelectedObject() {
 export function performDeleteObject() {
     if (state.appState.selectedObjectIndex === -1) return;
     state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
+    state.markDirty();
     const objects = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects;
     objects.splice(state.appState.selectedObjectIndex, 1);
     state.appState.selectedObjectIndex = -1;
@@ -474,6 +481,7 @@ function undo() {
     if (restoredObjects) {
         const filename = state.imageFiles[state.currentImageIndex].name;
         state.annotationData[filename].objects = JSON.parse(JSON.stringify(restoredObjects));
+        state.markDirty();
 
         state.resetAppState();
         updateAllUI();
