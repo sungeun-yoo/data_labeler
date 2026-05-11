@@ -3,7 +3,7 @@ import { redrawCanvas } from './canvas.js';
 import { formatBytes, showNotification, getColorForClass } from './utils.js';
 import * as shortcutManager from './shortcutManager.js';
 import { setCustomColor } from './colorManager.js';
-import { exportAsLiveJson, exportAsYoloPose, exportAsMfYoloPose } from './dataExporter.js';
+import { exportAsLiveJson, exportAsYoloDetection } from './dataExporter.js';
 
 export const ui = {};
 let tempShortcutConfig = {};
@@ -17,7 +17,6 @@ export function initUI() {
         btnLoadImageDir: document.getElementById('btnLoadImageDir'),
         imageDirLoader: document.getElementById('imageDirLoader'),
         labelDirLoader: document.getElementById('labelDirLoader'),
-        sapiensDirLoader: document.getElementById('sapiensDirLoader'),
         btnOpenLabelModal: document.getElementById('btnOpenLabelModal'),
         btnSave: document.getElementById('btnSave'),
         btnPrev: document.getElementById('btnPrev'),
@@ -68,20 +67,15 @@ export function initUI() {
 
         // Label Viewer panel
         btnLiveJson: document.getElementById('btn-live-json'),
-        btnYoloPose: document.getElementById('btn-yolo-pose'),
-        btnMfYoloPose: document.getElementById('btn-mf-yolo-pose'),
+        btnYoloDet: document.getElementById('btn-yolo-det'),
         liveJsonContent: document.getElementById('live-json-content'),
-        yoloPoseContent: document.getElementById('yolo-pose-content'),
-        mfYoloPoseContent: document.getElementById('mf-yolo-pose-content'),
+        yoloDetContent: document.getElementById('yolo-det-content'),
         liveJsonOutput: document.getElementById('live-json-output'),
-        yoloPoseOutput: document.getElementById('yolo-pose-output'),
-        mfYoloPoseOutput: document.getElementById('mf-yolo-pose-output'),
+        yoloDetOutput: document.getElementById('yolo-det-output'),
         btnCopyLive: document.getElementById('btn-copy-live'),
         btnDownloadLive: document.getElementById('btn-download-live'),
         btnCopyYolo: document.getElementById('btn-copy-yolo'),
         btnDownloadYolo: document.getElementById('btn-download-yolo'),
-        btnCopyMfYolo: document.getElementById('btn-copy-mf-yolo'),
-        btnDownloadMfYolo: document.getElementById('btn-download-mf-yolo'),
 
         // Image List panel
         imageListContentWrapper: document.getElementById('image-list-content-wrapper'),
@@ -102,8 +96,6 @@ export function initUI() {
     ui.btnDownloadLive.innerHTML = downloadIcon;
     ui.btnCopyYolo.innerHTML = copyIcon;
     ui.btnDownloadYolo.innerHTML = downloadIcon;
-    ui.btnCopyMfYolo.innerHTML = copyIcon;
-    ui.btnDownloadMfYolo.innerHTML = downloadIcon;
 
     ui.btnPrev.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
     ui.btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
@@ -111,7 +103,6 @@ export function initUI() {
     ui.canvasLoader.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p>이미지 로딩 중...</p>`;
     document.querySelector('footer').innerHTML = `<div class="flex items-center gap-x-4 gap-y-1 flex-wrap"><p id="imageName" class="font-semibold truncate">N/A</p><p id="imageDimensions" style="color: var(--md-sys-color-on-surface-variant);"></p><p id="imageSize" style="color: var(--md-sys-color-on-surface-variant);"></p></div><div class="flex items-center gap-4"><p id="mouseCoords" style="color: var(--md-sys-color-on-surface-variant);"></p><p id="notificationMessage" class="transition-colors duration-300"></p><p id="zoomLevel" style="color: var(--md-sys-color-on-surface-variant);">Zoom: 100%</p></div>`;
 
-    // Re-assign footer elements after innerHTML overwrite
     Object.assign(ui, {
         imageName: document.getElementById('imageName'),
         imageDimensions: document.getElementById('imageDimensions'),
@@ -139,17 +130,14 @@ export function initUI() {
         showNotification('단축키가 기본값으로 초기화되었습니다.', 'info', ui);
     });
 
-    // Set initial state for Label viewer
     switchLabelViewTab('live');
     ui.classColorIndicator.addEventListener('click', () => {
         const colorInput = document.createElement('input');
         colorInput.type = 'color';
         colorInput.style.display = 'none';
 
-        // Set initial value to current color to open picker with it selected
         const currentBgColor = ui.classColorIndicator.style.backgroundColor;
         if (currentBgColor) {
-            // Need to convert rgb to hex for the color input
             const rgb = currentBgColor.match(/\d+/g);
             if (rgb) {
                 colorInput.value = `#${(+rgb[0]).toString(16).padStart(2, '0')}${(+rgb[1]).toString(16).padStart(2, '0')}${(+rgb[2]).toString(16).padStart(2, '0')}`;
@@ -161,8 +149,8 @@ export function initUI() {
             const className = state.appState.currentClass;
             if (className) {
                 setCustomColor(className, newColor);
-                updateAllUI(); // Redraw UI to reflect new color
-                redrawCanvas(); // Redraw canvas to reflect new color
+                updateAllUI();
+                redrawCanvas();
             }
             document.body.removeChild(colorInput);
         });
@@ -176,7 +164,7 @@ export function initUI() {
 
 function populateShortcutModal() {
     const shortcuts = shortcutManager.getShortcuts();
-    tempShortcutConfig = JSON.parse(JSON.stringify(shortcuts)); // Create a deep copy for editing
+    tempShortcutConfig = JSON.parse(JSON.stringify(shortcuts));
     const descriptions = shortcutManager.actionDescriptions;
 
     ui.shortcutList.innerHTML = '';
@@ -195,8 +183,6 @@ function populateShortcutModal() {
         const keysWrapper = document.createElement('div');
         keysWrapper.className = 'flex items-center gap-2';
 
-        // For now, we only support editing the first key.
-        // A more complex UI would be needed for multi-key assignment.
         const keyInput = document.createElement('input');
         keyInput.type = 'text';
         keyInput.value = assignedKeys[0] || 'N/A';
@@ -211,11 +197,8 @@ function populateShortcutModal() {
         keyInput.addEventListener('keydown', (e) => {
             e.preventDefault();
             const newKey = e.key.toLowerCase();
-
-            // TODO: Check for duplicates before assigning
-
             keyInput.value = newKey;
-            tempShortcutConfig[action] = [newKey]; // Replace current keys with the new one
+            tempShortcutConfig[action] = [newKey];
             keyInput.blur();
         });
 
@@ -252,9 +235,8 @@ export function updateClassSelectorUI() {
     }
     ui.classSelectorWrapper.classList.remove('hidden');
 
-    const classes = Object.keys(state.config);
+    const classes = state.config;
 
-    // Only redraw options if they've changed
     if (ui.classSelector.options.length !== classes.length) {
         ui.classSelector.innerHTML = '';
         classes.forEach(className => {
@@ -272,17 +254,10 @@ export function updateClassSelectorUI() {
 export function updateModeIndicatorUI() {
     const indicator = ui.modeIndicator;
     indicator.classList.remove('bg-yellow-500', 'text-black');
-    indicator.style.backgroundColor = '';
-    indicator.style.color = '';
 
     if (state.appState.mode === 'DRAWING_BBOX') {
         indicator.textContent = 'BBOX 그리기 모드';
         indicator.classList.add('bg-yellow-500', 'text-black');
-        indicator.classList.remove('hidden');
-    } else if (state.appState.mode === 'EDITING_POSE' && state.appState.selectedPointIndex !== -1) {
-        indicator.textContent = '랜드마크 그리기 모드';
-        indicator.style.backgroundColor = 'var(--md-sys-color-primary)';
-        indicator.style.color = 'var(--md-sys-color-on-primary)';
         indicator.classList.remove('hidden');
     } else {
         indicator.classList.add('hidden');
@@ -300,15 +275,9 @@ export function updateHelpUI() {
         ui.classSelectorWrapper.classList.add('hidden');
         ui.configHelp.innerHTML = `
             <h3 class="font-bold text-white mb-2">1. Config 파일을 로드하세요.</h3>
-            <p>라벨의 이름과 뼈대(skeleton) 구조를 정의하는 JSON 파일입니다.</p>
+            <p>라벨링할 클래스 이름 목록을 정의하는 JSON 배열 파일입니다.</p>
             <p class="mt-2">예시 포맷:</p>
-            <pre class="bg-gray-900 p-2 rounded-md mt-1 text-xs whitespace-pre-wrap"><code>{
-  "person": {
-    "labels": ["코", "눈", ...],
-    "skeleton": [ [0, 1], [0, 2], ... ]
-  },
-  "vehicle": { ... }
-}</code></pre>
+            <pre class="bg-gray-900 p-2 rounded-md mt-1 text-xs whitespace-pre-wrap"><code>["person", "car", "truck"]</code></pre>
         `;
     } else if (state.imageFiles.length === 0) {
         ui.btnAddObject.disabled = true;
@@ -332,12 +301,11 @@ export function updateObjectListUI() {
         return;
     }
 
-    const allClasses = Object.keys(state.config || {});
+    const allClasses = state.config || [];
 
     const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
     const eyeSlashIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.242 4.242a2 2 0 012.828 2.828l-2.828-2.828zM10 17a7 7 0 01-7-7c0-1.789.66-3.425 1.76-4.673l1.428 1.428A4.982 4.982 0 008 10a5 5 0 004.899 5.002l1.43 1.428A6.971 6.971 0 0110 17z" clip-rule="evenodd" /></svg>`;
     const trashIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
-
 
     objects.forEach((obj, index) => {
         const item = document.createElement('div');
@@ -382,17 +350,15 @@ export function updateDetailsPanelUI() {
         </div>
         <div id="class-info" class="p-2 text-sm space-y-1"></div>
         <div id="bbox-info" class="p-2 text-sm space-y-2"></div>
-        <div id="keypoint-list" class="space-y-1 p-1"></div>
     `;
 
     document.getElementById('details-title').textContent = `객체 ${state.appState.selectedObjectIndex + 1} 상세정보`;
 
     updateClassInfoUI(obj);
     updateBboxInfoUI(obj);
-    updateKeypointListUI(obj);
 }
 
-let activeSidebar = null; // Can be 'label' or 'image'
+let activeSidebar = null;
 const imageUrlCache = new Map();
 
 export function clearImageCache() {
@@ -403,7 +369,6 @@ export function clearImageCache() {
 export function switchSidebar(sidebarName) {
     const isAlreadyOpen = activeSidebar === sidebarName;
 
-    // Close any open sidebar first
     if (activeSidebar) {
         const currentSidebar = ui[`${activeSidebar}Sidebar`];
         const currentToggle = ui[`${activeSidebar}SidebarToggle`];
@@ -412,16 +377,13 @@ export function switchSidebar(sidebarName) {
         currentSidebar.style.display = 'none';
     }
 
-    // If it was already open, we just wanted to close it.
     if (isAlreadyOpen) {
         activeSidebar = null;
         ui.leftSidebarContainer.classList.remove('toggled');
     } else {
-        // Open the new sidebar
         const newSidebar = ui[`${sidebarName}Sidebar`];
         const newToggle = ui[`${sidebarName}SidebarToggle`];
         newSidebar.style.display = 'flex';
-        // Timeout to allow display property to apply before transition
         setTimeout(() => {
             newSidebar.classList.add('active');
             newToggle.classList.add('active');
@@ -440,11 +402,10 @@ export function updateImageListUI() {
     const items = wrapper.children;
     const isListView = wrapper.classList.contains('list-view');
 
-    // If DOM items don't match data, or if view mode has changed, rebuild everything
     if (items.length !== state.imageFiles.length ||
         (items.length > 0 && items[0].classList.contains('list-view-item') !== isListView)) {
 
-        wrapper.innerHTML = ''; // Clear previous items
+        wrapper.innerHTML = '';
         if (state.imageFiles.length === 0) {
             wrapper.innerHTML = `<p class="text-gray-500 text-center col-span-full">이미지가 없습니다.</p>`;
             return;
@@ -457,19 +418,13 @@ export function updateImageListUI() {
             item.dataset.imageIndex = index;
 
             const img = document.createElement('img');
-            // Use a 1x1 transparent pixel as a placeholder to maintain layout
             img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
             img.dataset.filename = file.name;
             img.classList.add('lazy-load-thumbnail');
             item.appendChild(img);
 
-            // Create the correct container for info
             const infoContainer = document.createElement('div');
-            if (!isListView) {
-                infoContainer.className = 'icon-view-status-container';
-            } else {
-                infoContainer.className = 'info';
-            }
+            infoContainer.className = !isListView ? 'icon-view-status-container' : 'info';
             item.appendChild(infoContainer);
             wrapper.appendChild(item);
         });
@@ -493,49 +448,40 @@ export function updateImageListUI() {
                     }
                 }
             });
-        }, { root: wrapper, rootMargin: '200px' }); // Pre-load images 200px before they are visible
+        }, { root: wrapper, rootMargin: '200px' });
 
         lazyImages.forEach(img => imageObserver.observe(img));
     }
 
-    // Now, update the state of the existing (or newly created) items
     Array.from(items).forEach((item, index) => {
         const file = state.imageFiles[index];
         const annotation = state.annotationData[file.name] || { objects: [] };
         const objectCount = annotation.objects.length;
         const isCompleted = objectCount > 0;
 
-        // Update selection
         item.classList.toggle('selected', index === state.currentImageIndex);
 
-        // Update content (only if it needs to be changed)
         let newContent;
         const infoContainer = item.querySelector('.info, .icon-view-status-container');
-
 
         if (isListView) {
             const statusIconHTML = isCompleted
                 ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
                 : '<span class="status-icon"></span>';
-
             newContent = `<span class="filename" title="${file.name}">${index + 1}. ${file.name}</span><span class="status">${statusIconHTML}<span>obj ${objectCount}</span></span>`;
         } else {
-             const statusIconHTML = isCompleted
+            const statusIconHTML = isCompleted
                 ? `<span class="status-icon completed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>`
                 : '';
             const objCountText = objectCount > 0 ? `<span class="obj-count">obj ${objectCount}</span>` : '';
-            const statusHTML = `<div class="icon-view-status">${statusIconHTML}${objCountText}</div>`;
-            newContent = `${statusHTML}<div class="info">${file.name}</div>`;
+            newContent = `<div class="icon-view-status">${statusIconHTML}${objCountText}</div><div class="info">${file.name}</div>`;
         }
 
-        // Only update innerHTML if it has actually changed to prevent flicker
         if (infoContainer && infoContainer.innerHTML !== newContent) {
             infoContainer.innerHTML = newContent;
         }
     });
 
-
-    // Scroll to the selected item if it's not already visible
     const selectedItem = wrapper.querySelector('.selected');
     if (selectedItem) {
         const wrapperRect = wrapper.getBoundingClientRect();
@@ -546,44 +492,32 @@ export function updateImageListUI() {
     }
 }
 
-
 export function switchLabelViewTab(tab) {
-    // Hide all content panels by setting display to 'none'
     ui.liveJsonContent.style.display = 'none';
-    ui.yoloPoseContent.style.display = 'none';
-    ui.mfYoloPoseContent.style.display = 'none';
+    ui.yoloDetContent.style.display = 'none';
 
-    // Deactivate all tab buttons
     ui.btnLiveJson.classList.remove('active');
-    ui.btnYoloPose.classList.remove('active');
-    ui.btnMfYoloPose.classList.remove('active');
+    ui.btnYoloDet.classList.remove('active');
 
-    // Show the selected tab by setting display to 'flex' and activate the button
     if (tab === 'live') {
         ui.liveJsonContent.style.display = 'flex';
         ui.btnLiveJson.classList.add('active');
     } else if (tab === 'yolo') {
-        ui.yoloPoseContent.style.display = 'flex';
-        ui.btnYoloPose.classList.add('active');
-    } else if (tab === 'mf_yolo') {
-        ui.mfYoloPoseContent.style.display = 'flex';
-        ui.btnMfYoloPose.classList.add('active');
+        ui.yoloDetContent.style.display = 'flex';
+        ui.btnYoloDet.classList.add('active');
     }
 }
 
 export function updateLabelView() {
     if (state.currentImageIndex < 0) {
         ui.liveJsonOutput.textContent = '{}';
-        ui.yoloPoseOutput.textContent = '';
-        ui.mfYoloPoseOutput.textContent = '';
+        ui.yoloDetOutput.textContent = '';
         return;
     }
 
     ui.liveJsonOutput.textContent = exportAsLiveJson();
-    ui.yoloPoseOutput.textContent = exportAsYoloPose();
-    ui.mfYoloPoseOutput.textContent = exportAsMfYoloPose();
+    ui.yoloDetOutput.textContent = exportAsYoloDetection();
 }
-
 
 function updateClassInfoUI(obj) {
     const classInfoEl = document.getElementById('class-info');
@@ -595,18 +529,15 @@ function updateClassInfoUI(obj) {
     `;
 
     const selector = document.getElementById('details-class-selector');
-    const classes = Object.keys(state.config);
+    const classes = state.config || [];
     classes.forEach(className => {
         const option = document.createElement('option');
         option.value = className;
         option.textContent = className;
-        if (className === obj.className) {
-            option.selected = true;
-        }
+        if (className === obj.className) option.selected = true;
         selector.appendChild(option);
     });
 }
-
 
 export function updateBboxInfoUI(obj) {
     const bboxInfoEl = document.getElementById('bbox-info');
@@ -652,89 +583,6 @@ export function updateBboxInfoUI(obj) {
     });
 }
 
-export function updateKeypointListUI(obj) {
-    const keypointListEl = document.getElementById('keypoint-list');
-    if (!keypointListEl) return;
-    keypointListEl.innerHTML = '';
-
-    if (!obj || !obj.className || !state.config[obj.className]) {
-        keypointListEl.innerHTML = '<p class="text-xs text-gray-500 p-2">객체의 클래스가 유효하지 않아 키포인트를 표시할 수 없습니다.</p>';
-        return;
-    }
-
-    const header = document.createElement('div');
-    header.className = 'keypoint-header p-2 text-xs font-bold';
-    header.innerHTML = `
-        <span class="col-label">라벨</span>
-        <span class="col-coords">좌표</span>
-        <span class="col-vis">
-            Visibility
-            <div class="tooltip-container">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.546-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <div class="tooltip">
-                    <p><b>0:</b> 없음 (이미지 영역 밖에 있거나 없음)</p>
-                    <p><b>1:</b> 가려짐 (다른 물체에 의해 가려졌지만 위치 추정 가능)</p>
-                    <p><b>2:</b> 보임 (이미지 영역 안에서 명확하게 보임)</p>
-                </div>
-            </div>
-        </span>
-    `;
-    keypointListEl.appendChild(header);
-
-    const points = obj.keypoints;
-    const labels = state.config[obj.className].labels;
-
-    labels.forEach((label, index) => {
-        const point = points[index];
-        const item = document.createElement('div');
-        item.className = 'keypoint-item p-2 text-xs rounded-lg cursor-pointer transition-colors flex items-center';
-        if (index === state.appState.selectedPointIndex) item.classList.add('selected');
-
-        const visibilityRadios = [0, 1, 2].map(v => `
-            <label class="inline-flex items-center">
-                <input type="radio" class="form-radio bg-gray-900 text-blue-500" name="vis-${state.appState.selectedObjectIndex}-${index}" value="${v}" ${point.visible === v ? 'checked' : ''}>
-                <span class="ml-1 text-gray-400">${v}</span>
-            </label>
-        `).join('');
-
-        item.innerHTML = `
-            <span class="col-label font-semibold truncate">${index + 1}. ${label}</span>
-            <div class="col-coords flex items-center gap-1">
-                <span class="text-gray-400">X:</span>
-                <input type="number" value="${point.x.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
-                <span class="text-gray-400">Y:</span>
-                <input type="number" value="${point.y.toFixed(1)}" class="w-full rounded px-1 py-0.5 text-white">
-            </div>
-            <div class="col-vis flex justify-around items-center">
-                ${visibilityRadios}
-            </div>
-        `;
-
-        item.dataset.keypointId = index;
-
-        const xInput = item.querySelector('input[type="number"][value*="."]');
-        const yInput = item.querySelectorAll('input[type="number"]')[1];
-
-        [xInput, yInput].forEach((input, i) => {
-            input.addEventListener('change', (e) => {
-                state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
-                point[i === 0 ? 'x' : 'y'] = parseFloat(e.target.value);
-                redrawCanvas();
-            });
-        });
-
-        item.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
-                point.visible = parseInt(e.target.value);
-                redrawCanvas();
-            });
-        });
-
-        keypointListEl.appendChild(item);
-    });
-}
-
 export function updateInfoBarUI() {
     if (state.currentImageIndex < 0) {
         ui.imageName.textContent = 'N/A';
@@ -742,7 +590,7 @@ export function updateInfoBarUI() {
         ui.imageSize.textContent = '';
         ui.mouseCoords.textContent = '';
         return;
-    };
+    }
     const file = state.imageFiles[state.currentImageIndex];
 
     ui.imageName.textContent = file.name;

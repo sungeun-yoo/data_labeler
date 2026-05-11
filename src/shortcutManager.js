@@ -82,8 +82,6 @@ export function resetShortcuts() {
 export const actionDescriptions = {
     PREV_IMAGE: '이전 이미지',
     NEXT_IMAGE: '다음 이미지',
-    PREV_LABEL: '이전 라벨',
-    NEXT_LABEL: '다음 라벨',
     ADD_OBJECT: '객체 추가',
     DELETE_OBJECT: '객체 삭제',
     CANCEL_ACTION: '동작 취소',

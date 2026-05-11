@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pose Estimation 라벨링 툴 (Material Design 3)</title>
+    <title>YOLO Detection 라벨링 툴</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/split.js/dist/split.min.js"></script>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
@@ -18,16 +18,15 @@
         <div class="h-8 w-px" style="background-color: var(--md-sys-color-outline-variant);"></div>
         <input type="file" id="configLoader" accept=".json" class="hidden">
         <button id="btnLoadConfig" class="btn btn-tonal">Config 열기</button>
-        
+
         <input type="file" id="imageDirLoader" webkitdirectory multiple class="hidden">
         <button id="btnLoadImageDir" class="btn btn-tonal" disabled>이미지 폴더 열기</button>
 
         <input type="file" id="labelDirLoader" webkitdirectory multiple class="hidden">
-        <input type="file" id="sapiensDirLoader" webkitdirectory multiple class="hidden">
         <button id="btnOpenLabelModal" class="btn btn-tonal" disabled>라벨 폴더 열기</button>
 
-        <button id="btnSave" class="btn btn-filled" disabled>전체 JSON 저장 (ZIP)</button>
-        
+        <button id="btnSave" class="btn btn-filled" disabled>전체 저장 (ZIP)</button>
+
         <div class="flex-grow"></div>
 
         <div class="flex items-center gap-2 mr-2">
@@ -59,8 +58,7 @@
                 </div>
                 <div class="flex p-2 gap-2" style="background-color: var(--md-sys-color-surface-container);">
                     <button id="btn-live-json" class="btn btn-tonal flex-grow text-sm">JSON</button>
-                    <button id="btn-yolo-pose" class="btn btn-tonal flex-grow text-sm">YOLO</button>
-                    <button id="btn-mf-yolo-pose" class="btn btn-tonal flex-grow text-sm">MF_YOLO</button>
+                    <button id="btn-yolo-det" class="btn btn-tonal flex-grow text-sm">YOLO</button>
                 </div>
                 <div id="label-content-wrapper" class="flex-grow p-2 overflow-y-auto">
                     <div id="live-json-content" class="relative h-full">
@@ -70,19 +68,12 @@
                         </div>
                         <pre><code id="live-json-output" class="text-xs">{}</code></pre>
                     </div>
-                    <div id="yolo-pose-content" class="hidden relative h-full">
+                    <div id="yolo-det-content" class="hidden relative h-full">
                         <div class="absolute top-0 right-0 flex gap-1 z-10">
                             <button id="btn-copy-yolo" class="btn btn-icon btn-tonal"></button>
                             <button id="btn-download-yolo" class="btn btn-icon btn-tonal"></button>
                         </div>
-                        <pre><code id="yolo-pose-output" class="text-xs"></code></pre>
-                    </div>
-                    <div id="mf-yolo-pose-content" class="hidden relative h-full">
-                        <div class="absolute top-0 right-0 flex gap-1 z-10">
-                            <button id="btn-copy-mf-yolo" class="btn btn-icon btn-tonal"></button>
-                            <button id="btn-download-mf-yolo" class="btn btn-icon btn-tonal"></button>
-                        </div>
-                        <pre><code id="mf-yolo-pose-output" class="text-xs"></code></pre>
+                        <pre><code id="yolo-det-output" class="text-xs"></code></pre>
                     </div>
                 </div>
             </aside>
@@ -135,7 +126,7 @@
             </aside>
         </div>
     </div>
-    
+
     <footer class="p-2 shadow-inner flex-shrink-0 flex justify-between items-center text-sm" style="background-color: var(--md-sys-color-surface-container-high); border-top: 1px solid var(--md-sys-color-outline-variant);"></footer>
 
     <div id="toast-popup"></div>

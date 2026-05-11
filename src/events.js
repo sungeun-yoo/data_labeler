@@ -1,9 +1,9 @@
 import * as state from './state.js';
-import { ui, updateAllUI, updateBboxInfoUI, updateKeypointListUI, updateInfoBarUI, switchSidebar, switchLabelViewTab, updateImageListUI } from './ui.js';
+import { ui, updateAllUI, updateBboxInfoUI, updateInfoBarUI, switchSidebar, switchLabelViewTab, updateImageListUI } from './ui.js';
 import { redrawCanvas, centerImage, handleResize } from './canvas.js';
 import { getMousePos, screenToWorld, isPointInBbox, getResizeHandleAt, showNotification, copyToClipboard, downloadFile } from './utils.js';
-import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleImageDirectorySelection, handleLabelDirectorySelection, handleSapiensDirectorySelection } from './file.js';
-import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal, showLabelFormatModal } from './modal.js';
+import { navigateImage, saveAllAnnotationsToZip, handleConfigFile, handleImageDirectorySelection, handleLabelDirectorySelection } from './file.js';
+import { showDeleteConfirmModal, isModalOpen, hideDeleteConfirmModal } from './modal.js';
 import { getKeyToActionMap } from './shortcutManager.js';
 
 function updateCursor() {
@@ -11,17 +11,14 @@ function updateCursor() {
         ui.canvas.style.cursor = 'grabbing';
         return;
     }
-
     if (state.appState.isAltDown) {
         ui.canvas.style.cursor = 'grab';
         return;
     }
-
-    if (state.appState.mode === 'EDITING_POSE' || state.appState.mode === 'DRAWING_BBOX') {
+    if (state.appState.mode === 'DRAWING_BBOX') {
         ui.canvas.style.cursor = 'crosshair';
         return;
     }
-
     ui.canvas.style.cursor = 'pointer';
 }
 
@@ -31,10 +28,8 @@ export function initializeEventListeners() {
     ui.btnLoadImageDir.addEventListener('click', () => ui.imageDirLoader.click());
     ui.imageDirLoader.addEventListener('change', handleImageDirectorySelection);
 
-    // New unified label loader
-    ui.btnOpenLabelModal.addEventListener('click', showLabelFormatModal);
+    ui.btnOpenLabelModal.addEventListener('click', () => ui.labelDirLoader.click());
     ui.labelDirLoader.addEventListener('change', handleLabelDirectorySelection);
-    ui.sapiensDirLoader.addEventListener('change', handleSapiensDirectorySelection);
 
     ui.btnSave.addEventListener('click', saveAllAnnotationsToZip);
     ui.btnPrev.addEventListener('click', () => navigateImage(-1));
@@ -43,7 +38,7 @@ export function initializeEventListeners() {
 
     ui.classSelector.addEventListener('change', (e) => {
         state.appState.currentClass = e.target.value;
-        updateAllUI(); // Ensure color indicator updates
+        updateAllUI();
     });
 
     ui.canvas.addEventListener('mousedown', handleMouseDown);
@@ -59,14 +54,12 @@ export function initializeEventListeners() {
 
     window.addEventListener('beforeunload', (e) => {
         if (state.hasChanges()) {
-            // Prevent default behavior to show the confirmation dialog
             e.preventDefault();
-            // Required for Chrome
             e.returnValue = '';
         }
     });
 
-    // Event delegation for dynamic elements
+    // Event delegation for object list
     ui.objectListWrapper.addEventListener('click', (e) => {
         const item = e.target.closest('.object-item');
         if (!item) return;
@@ -75,7 +68,7 @@ export function initializeEventListeners() {
         const actionButton = e.target.closest('[data-action]');
 
         if (actionButton) {
-            e.stopPropagation(); // Prevent selection when clicking a button
+            e.stopPropagation();
             const action = actionButton.dataset.action;
             const objects = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects;
             const object = objects[objectId];
@@ -86,7 +79,6 @@ export function initializeEventListeners() {
                 updateAllUI();
                 redrawCanvas();
             } else if (action === 'delete-object') {
-                // Temporarily select the object to delete, as deleteSelectedObject depends on it
                 state.appState.selectedObjectIndex = objectId;
                 deleteSelectedObject();
             }
@@ -96,18 +88,9 @@ export function initializeEventListeners() {
     });
 
     ui.detailsWrapper.addEventListener('click', (e) => {
-
         const addBboxButton = e.target.closest('button[data-action="add-bbox"]');
         if (addBboxButton) {
             enterBboxDrawingMode(state.appState.selectedObjectIndex);
-            return;
-        }
-
-        const keypointItem = e.target.closest('.keypoint-item');
-        if (keypointItem && keypointItem.dataset.keypointId && e.target.tagName !== 'INPUT') {
-            state.appState.selectedPointIndex = parseInt(keypointItem.dataset.keypointId);
-            updateAllUI();
-            redrawCanvas();
         }
     });
 
@@ -131,7 +114,7 @@ export function initializeEventListeners() {
 
     function handleResizeSidebar(e) {
         const newWidth = e.clientX;
-        if (newWidth > 200 && newWidth < 800) { // Min/max width
+        if (newWidth > 200 && newWidth < 800) {
             const sidebarWidth = `${newWidth}px`;
             ui.labelSidebar.style.setProperty('--sidebar-width', sidebarWidth);
             ui.imageSidebar.style.setProperty('--sidebar-width', sidebarWidth);
@@ -173,11 +156,9 @@ export function initializeEventListeners() {
         ui.imageListContentWrapper.style.setProperty('--thumbnail-size', `${e.target.value}px`);
     });
 
-
     // Label Viewer Panel
     ui.btnLiveJson.addEventListener('click', () => switchLabelViewTab('live'));
-    ui.btnYoloPose.addEventListener('click', () => switchLabelViewTab('yolo'));
-    ui.btnMfYoloPose.addEventListener('click', () => switchLabelViewTab('mf_yolo'));
+    ui.btnYoloDet.addEventListener('click', () => switchLabelViewTab('yolo'));
 
     ui.btnCopyLive.addEventListener('click', () => copyToClipboard(ui.liveJsonOutput.textContent, ui));
     ui.btnDownloadLive.addEventListener('click', () => {
@@ -185,16 +166,10 @@ export function initializeEventListeners() {
         downloadFile(ui.liveJsonOutput.textContent, filename || 'annotation.json');
     });
 
-    ui.btnCopyYolo.addEventListener('click', () => copyToClipboard(ui.yoloPoseOutput.textContent, ui));
+    ui.btnCopyYolo.addEventListener('click', () => copyToClipboard(ui.yoloDetOutput.textContent, ui));
     ui.btnDownloadYolo.addEventListener('click', () => {
         const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + ".txt";
-        downloadFile(ui.yoloPoseOutput.textContent, filename || 'annotation.txt', 'text/plain');
-    });
-
-    ui.btnCopyMfYolo.addEventListener('click', () => copyToClipboard(ui.mfYoloPoseOutput.textContent, ui));
-    ui.btnDownloadMfYolo.addEventListener('click', () => {
-        const filename = state.imageFiles[state.currentImageIndex]?.name.replace(/\.[^/.]+$/, "") + "_mf.txt";
-        downloadFile(ui.mfYoloPoseOutput.textContent, filename || 'annotation_mf.txt', 'text/plain');
+        downloadFile(ui.yoloDetOutput.textContent, filename || 'annotation.txt', 'text/plain');
     });
 
     // Icon Modal
@@ -206,7 +181,7 @@ export function initializeEventListeners() {
     ui.iconModal.addEventListener('click', (e) => {
         if (e.target === ui.iconModal) {
             ui.iconModal.classList.remove('visible');
-            setTimeout(() => ui.iconModal.classList.add('hidden'), 300); // Wait for transition to finish
+            setTimeout(() => ui.iconModal.classList.add('hidden'), 300);
         }
     });
 }
@@ -232,7 +207,6 @@ function handleMouseDown(e) {
     }
 
     const objects = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects;
-    const clickRadius = 8 / state.transform.scale;
 
     if (state.appState.selectedObjectIndex !== -1) {
         const selectedObject = objects[state.appState.selectedObjectIndex];
@@ -245,51 +219,18 @@ function handleMouseDown(e) {
         }
     }
 
-    if (state.appState.mode === 'EDITING_POSE' && state.appState.selectedObjectIndex !== -1) {
-        const selectedObject = objects[state.appState.selectedObjectIndex];
-        for (let j = 0; j < selectedObject.keypoints.length; j++) {
-            const p = selectedObject.keypoints[j];
-            if (p.visible > 0 && Math.hypot(p.x - worldPos.x, p.y - worldPos.y) < clickRadius) {
-                state.pushHistory(JSON.parse(JSON.stringify(objects)));
-                state.appState.isDraggingPoint = true;
-                state.appState.draggingPointInfo = { objIndex: state.appState.selectedObjectIndex, ptIndex: j };
-                state.appState.selectedPointIndex = j;
-                updateAllUI();
-                redrawCanvas();
-                return;
-            }
-        }
-        if (state.appState.selectedPointIndex !== -1 && isPointInBbox(worldPos, selectedObject.bbox)) {
-            state.pushHistory(JSON.parse(JSON.stringify(objects)));
-            const pointToUpdate = selectedObject.keypoints[state.appState.selectedPointIndex];
-            if (pointToUpdate) {
-                pointToUpdate.x = worldPos.x;
-                pointToUpdate.y = worldPos.y;
-                pointToUpdate.visible = state.appState.isCtrlDown ? 1 : 2;
-            }
-            const labels = state.config[selectedObject.className].labels;
-            const nextPointIndex = (state.appState.selectedPointIndex + 1) % labels.length;
-            state.appState.selectedPointIndex = nextPointIndex;
-            updateAllUI();
-            redrawCanvas();
-            return;
-        }
-    }
-
     for (let i = objects.length - 1; i >= 0; i--) {
         if (objects[i].hidden) continue;
         if (isPointInBbox(worldPos, objects[i].bbox)) {
             if (state.appState.selectedObjectIndex !== i) {
                 selectObject(i);
             }
-            // Dragging logic removed as per user request
             return;
         }
     }
 
     if (state.appState.selectedObjectIndex !== -1) {
         state.appState.selectedObjectIndex = -1;
-        state.appState.selectedPointIndex = -1;
         state.appState.mode = 'IDLE';
         updateAllUI();
         redrawCanvas();
@@ -304,11 +245,6 @@ function changeObjectClass(newClassName) {
     const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
     obj.className = newClassName;
 
-    // Re-initialize keypoints based on the new class
-    const newLabels = state.config[newClassName].labels;
-    obj.keypoints = newLabels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }));
-
-    state.appState.selectedPointIndex = -1; // Reset selected point
     updateAllUI();
     redrawCanvas();
 }
@@ -333,7 +269,6 @@ function handleMouseMove(e) {
         const imgWidth = state.currentImage.width;
         const imgHeight = state.currentImage.height;
 
-        // Clamp worldPos to image boundaries
         const clampedX = Math.max(0, Math.min(worldPos.x, imgWidth));
         const clampedY = Math.max(0, Math.min(worldPos.y, imgHeight));
 
@@ -347,18 +282,10 @@ function handleMouseMove(e) {
     } else if (state.appState.mode === 'DRAWING_BBOX' && state.appState.drawingBboxStartPoint) {
         state.appState.currentBbox[2] = worldPos.x;
         state.appState.currentBbox[3] = worldPos.y;
-    } else if (state.appState.isDraggingPoint) {
-        const { objIndex, ptIndex } = state.appState.draggingPointInfo;
-        const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[objIndex];
-        const point = obj.keypoints[ptIndex];
-        point.x = worldPos.x;
-        point.y = worldPos.y;
-        updateKeypointListUI(obj);
     }
 
     redrawCanvas();
 }
-
 
 function handleMouseUp(e) {
     if (state.appState.mode === 'DRAWING_BBOX' && state.appState.currentBbox) {
@@ -370,7 +297,7 @@ function handleMouseUp(e) {
             showNotification('BBox는 10x10 픽셀보다 커야 합니다.', 'error', ui);
             state.appState.currentBbox = null;
             state.appState.drawingBboxStartPoint = null;
-            state.appState.mode = 'IDLE'; // Or back to a default state
+            state.appState.mode = 'IDLE';
             updateAllUI();
             redrawCanvas();
         } else {
@@ -390,33 +317,21 @@ function handleMouseUp(e) {
                 obj.bbox = normalizedBbox;
                 newObjectIndex = state.appState.selectedObjectIndex;
             } else {
-                const newClass = state.appState.currentClass;
                 const newObject = {
                     id: `obj_${Date.now()}`,
-                    className: newClass,
+                    className: state.appState.currentClass,
                     bbox: normalizedBbox,
-                    keypoints: state.config[newClass].labels.map(labelName => ({ name: labelName, x: 0, y: 0, visible: 0 }))
                 };
                 state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.push(newObject);
                 newObjectIndex = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects.length - 1;
             }
 
+            state.appState.mode = 'IDLE';
             selectObject(newObjectIndex);
-
-            const newObject = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[newObjectIndex];
-            if (newObject.keypoints && newObject.keypoints.length > 0) {
-                state.appState.selectedPointIndex = 0; // Start with the first keypoint
-                state.appState.mode = 'EDITING_POSE';
-            } else {
-                state.appState.selectedPointIndex = -1;
-                state.appState.mode = 'IDLE';
-            }
-
             state.pushHistory(JSON.parse(JSON.stringify(state.annotationData[state.imageFiles[state.currentImageIndex].name].objects)));
             updateAllUI();
         }
 
-        // Reset drawing state regardless of outcome
         state.appState.drawingBboxStartPoint = null;
         state.appState.currentBbox = null;
     }
@@ -424,7 +339,6 @@ function handleMouseUp(e) {
     if (e.type === 'mouseout') state.appState.lastMouseWorldPos = null;
 
     state.appState.isPanning = false;
-    state.appState.isDraggingPoint = false;
     state.appState.isResizingBbox = false;
     state.appState.resizeHandle = null;
     updateCursor();
@@ -446,11 +360,6 @@ async function handleKeyDown(e) {
         updateCursor();
         return;
     }
-    if (e.key === 'Control') {
-        state.appState.isCtrlDown = true;
-        redrawCanvas();
-        return;
-    }
     if (e.altKey) return;
 
     const keyMap = getKeyToActionMap();
@@ -461,8 +370,6 @@ async function handleKeyDown(e) {
     const requiresModifier = action === 'UNDO' || action === 'SAVE';
     const hasModifier = e.ctrlKey || e.metaKey;
 
-    // If action requires modifier, it must be present.
-    // If action does not require modifier, it must be absent.
     if (requiresModifier !== hasModifier) return;
 
     e.preventDefault();
@@ -479,8 +386,6 @@ async function executeAction(action) {
     switch (action) {
         case 'PREV_IMAGE': await navigateImage(-1); break;
         case 'NEXT_IMAGE': await navigateImage(1); break;
-        case 'PREV_LABEL': navigateLabel(-1); break;
-        case 'NEXT_LABEL': navigateLabel(1); break;
         case 'ADD_OBJECT': enterBboxDrawingMode(); break;
         case 'DELETE_OBJECT': deleteSelectedObject(); break;
         case 'CANCEL_ACTION':
@@ -494,50 +399,21 @@ async function executeAction(action) {
     }
 }
 
-function navigateLabel(direction) {
-    if (state.appState.selectedObjectIndex === -1) return;
-
-    const obj = state.annotationData[state.imageFiles[state.currentImageIndex].name].objects[state.appState.selectedObjectIndex];
-    if (!obj || !obj.className || !state.config[obj.className]) return;
-
-    const labels = state.config[obj.className].labels;
-    const numLabels = labels.length;
-    if (numLabels === 0) return;
-
-    let nextIndex = state.appState.selectedPointIndex + direction;
-
-    if (nextIndex >= numLabels) {
-        nextIndex = 0;
-    } else if (nextIndex < 0) {
-        nextIndex = numLabels - 1;
-    }
-
-    state.appState.selectedPointIndex = nextIndex;
-    updateAllUI();
-    redrawCanvas();
-}
-
 function changeClassWithNumber(classIndex) {
     if (!state.config) return;
-    const classes = Object.keys(state.config);
+    const classes = state.config;
     if (classIndex > classes.length) return;
 
     const newClassName = classes[classIndex - 1];
-
     state.appState.currentClass = newClassName;
     showNotification(`${newClassName} 클래스로 객체 그리기를 시작합니다.`, 'info', ui);
     enterBboxDrawingMode();
 }
 
-
 function handleKeyUp(e) {
     if (e.key === 'Alt') {
         state.appState.isAltDown = false;
         updateCursor();
-    }
-    if (e.key === 'Control') {
-        state.appState.isCtrlDown = false;
-        redrawCanvas();
     }
 }
 
@@ -568,8 +444,7 @@ export function enterBboxDrawingMode(forObjectIndex = -1) {
 export function selectObject(objIndex) {
     if (state.appState.selectedObjectIndex !== objIndex) {
         state.appState.selectedObjectIndex = objIndex;
-        state.appState.selectedPointIndex = -1;
-        state.appState.mode = 'EDITING_POSE';
+        state.appState.mode = 'IDLE';
         updateAllUI();
         redrawCanvas();
         updateCursor();

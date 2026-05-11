@@ -5,8 +5,6 @@ export const shortcuts = {
     'arrowleft': 'PREV_IMAGE',
     'w': 'NEXT_IMAGE',
     'arrowright': 'NEXT_IMAGE',
-    'a': 'PREV_LABEL',
-    's': 'NEXT_LABEL',
     'delete': 'DELETE_OBJECT',
     'backspace': 'DELETE_OBJECT',
     'escape': 'CANCEL_ACTION',

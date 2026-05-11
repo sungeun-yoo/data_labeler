@@ -2,27 +2,21 @@ import * as state from './state.js';
 import { ui, updateAllUI, updateHelpUI, updateClassSelectorUI, clearImageCache } from './ui.js';
 import { showNotification } from './utils.js';
 import { handleResize, redrawCanvas, centerImage } from './canvas.js';
-import { exportDataAsYoloPose, exportDataAsMfYoloPose } from './dataExporter.js';
-import { showSapiensResultModal } from './modal.js';
+import { exportDataAsYoloDetection } from './dataExporter.js';
 
 function validateAndSetConfig(config, filename = 'default_config') {
-    if (typeof config !== 'object' || config === null) {
-        throw new Error("Config는 객체여야 합니다.");
+    if (!Array.isArray(config)) {
+        throw new Error("Config는 클래스 이름 배열이어야 합니다. 예: [\"person\", \"car\"]");
     }
-
-    const classes = Object.keys(config);
-    if (classes.length === 0) {
+    if (config.length === 0) {
         throw new Error("Config에 정의된 클래스가 없습니다.");
     }
-
-    for (const className of classes) {
-        const classConfig = config[className];
-        if (!Array.isArray(classConfig.labels)) throw new Error(`'${className}' 클래스에 'labels' 배열이 없습니다.`);
-        if (!Array.isArray(classConfig.skeleton)) throw new Error(`'${className}' 클래스에 'skeleton' 배열이 없습니다.`);
+    if (!config.every(c => typeof c === 'string' && c.length > 0)) {
+        throw new Error("Config의 모든 항목은 비어있지 않은 문자열이어야 합니다.");
     }
 
     state.setConfig(config);
-    state.appState.currentClass = classes[0];
+    state.appState.currentClass = config[0];
     showNotification(`${filename} 로드 완료`, 'success', ui);
     ui.btnLoadImageDir.disabled = false;
     ui.btnOpenLabelModal.disabled = false;
@@ -30,7 +24,6 @@ function validateAndSetConfig(config, filename = 'default_config') {
     ui.btnLoadConfig.textContent = 'Config 로드됨';
     updateClassSelectorUI();
 }
-
 
 export async function handleConfigFile(e) {
     const file = e.target.files[0];
@@ -70,7 +63,6 @@ export async function handleImageDirectorySelection(e) {
         state.setImageFiles(imageFiles);
         state.setAnnotationData({});
 
-        // Initialize annotation data structure
         imageFiles.forEach(file => {
             state.updateAnnotationData(file.name, { image_path: file.name, objects: [] });
         });
@@ -131,6 +123,13 @@ export async function handleLabelDirectorySelection(e) {
             if (jsonFile) {
                 try {
                     const data = JSON.parse(await jsonFile.text());
+                    // Strip keypoints if present (legacy format compatibility)
+                    if (data.objects) {
+                        data.objects = data.objects.map(obj => {
+                            const { keypoints, ...rest } = obj;
+                            return rest;
+                        });
+                    }
                     state.updateAnnotationData(imageFilename, data);
                     loadedJsonCount++;
                 } catch (err) {
@@ -153,118 +152,10 @@ export async function handleLabelDirectorySelection(e) {
             showNotification('일치하는 라벨 파일을 찾을 수 없습니다.', 'error', ui);
         }
 
-        // Refresh the current image's annotation
         await navigateImage(0);
 
     } catch (error) {
         showNotification(`라벨 로딩 오류: ${error.message}`, 'error', ui);
-    } finally {
-        e.target.value = '';
-    }
-}
-
-export async function handleSapiensDirectorySelection(e) {
-    if (state.imageFiles.length === 0) {
-        showNotification('먼저 이미지 폴더를 로드해주세요.', 'error', ui);
-        return;
-    }
-    if (!state.config.person) {
-        showNotification('Sapiens 포맷을 처리하려면 "person" 클래스 설정이 필요합니다.', 'error', ui);
-        return;
-    }
-
-    showNotification('Sapiens 라벨 폴더를 읽는 중...', 'info', ui);
-    try {
-        const files = Array.from(e.target.files);
-        const jsonFiles = files.filter(f => /\.json$/i.test(f.name));
-
-        if (jsonFiles.length === 0) {
-            throw new Error('폴더에 JSON 파일이 없습니다.');
-        }
-
-        // Sapiens 포맷은 파일 이름 매칭이 아니라, 폴더 내 모든 json을 합치는 방식일 수 있음.
-        // 여기서는 첫번째 json 파일 하나만 처리하는 것으로 가정.
-        // 만약 여러 파일이라면, 이미지 파일 이름과 매칭되는 로직 필요.
-        // 우선은 하나의 파일에 모든 이미지 데이터가 있다고 가정.
-        const sapiensFile = jsonFiles[0];
-
-        const fileContent = await sapiensFile.text();
-        const data = JSON.parse(fileContent);
-
-        if (!data.instance_info || !data.meta_info) {
-            throw new Error('Sapiens 포맷이 아닙니다. "instance_info" 또는 "meta_info" 속성이 없습니다.');
-        }
-
-        const keypointName2Id = data.meta_info.keypoint_name2id;
-        const configLabels = state.config.person.labels;
-
-        let loadedCount = 0;
-        let unmatchedCount = 0;
-        // instance_info is an array of objects, but the user sample suggests it corresponds to annotations for one or more images.
-        // The sample doesn't specify how to map instances to image files.
-        // A common pattern is one JSON per image, or a single JSON with a field mapping to the image name.
-        // Let's assume for now one JSON file per image, named identically.
-
-        const jsonFileMap = new Map(jsonFiles.map(f => [f.name.replace(/\.json$/i, ''), f]));
-
-        for (const imageFile of state.imageFiles) {
-            const imageNameWithoutExt = imageFile.name.replace(/\.[^/.]+$/, "");
-            const jsonFile = jsonFileMap.get(imageNameWithoutExt);
-
-            if(jsonFile) {
-                const sapiensData = JSON.parse(await jsonFile.text());
-                const objects = sapiensData.instance_info.map(instance => {
-                    const keypoints = configLabels.map(labelName => {
-                        const sapiensIndex = keypointName2Id[labelName];
-                        if (sapiensIndex !== undefined && instance.keypoints[sapiensIndex]) {
-                            const [x, y] = instance.keypoints[sapiensIndex];
-                            const score = instance.keypoint_scores[sapiensIndex];
-                            let visible = 0;
-                            if (score > 0.5) {
-                                visible = 2;
-                            } else if (score > 0.3) {
-                                visible = 1;
-                            }
-                            return { x, y, visible };
-                        }
-                        return { x: 0, y: 0, visible: 0 };
-                    });
-
-                    const bbox = instance.bbox && instance.bbox.length > 0 ? instance.bbox[0] : [0,0,0,0];
-
-                    return {
-                        className: 'person',
-                        bbox: bbox,
-                        keypoints: keypoints,
-                        hidden: false,
-                    };
-                });
-
-                state.updateAnnotationData(imageFile.name, {
-                    image_path: imageFile.name,
-                    image_width: state.annotationData[imageFile.name]?.image_width,
-                    image_height: state.annotationData[imageFile.name]?.image_height,
-                    objects: objects,
-                });
-                loadedCount++;
-            } else {
-                unmatchedCount++;
-            }
-        }
-
-        showSapiensResultModal(loadedCount, unmatchedCount);
-
-        if (loadedCount > 0) {
-            ui.btnOpenLabelModal.textContent = '라벨 로드됨';
-            ui.btnOpenLabelModal.classList.replace('btn-tonal', 'btn-success');
-        }
-
-        // Refresh the current image's annotation
-        await navigateImage(0);
-
-    } catch (error) {
-        showNotification(`Sapiens 라벨 로딩 오류: ${error.message}`, 'error', ui);
-        console.error(error);
     } finally {
         e.target.value = '';
     }
@@ -278,11 +169,11 @@ function getImageDimensions(file) {
                 state.annotationData[file.name].image_width = img.naturalWidth;
                 state.annotationData[file.name].image_height = img.naturalHeight;
             }
-            URL.revokeObjectURL(img.src); // Clean up the object URL
+            URL.revokeObjectURL(img.src);
             resolve();
         };
         img.onerror = () => {
-            URL.revokeObjectURL(img.src); // Clean up on error too
+            URL.revokeObjectURL(img.src);
             reject(new Error(`이미지 파일의 크기를 읽는 데 실패했습니다: ${file.name}`));
         };
         img.src = URL.createObjectURL(file);
@@ -319,7 +210,6 @@ function loadAndDrawImage(index) {
         img.onload = async () => {
             try {
                 state.setCurrentImage(img);
-
                 await loadAnnotationForImage(index);
                 handleResize();
                 updateAllUI();
@@ -335,17 +225,12 @@ function loadAndDrawImage(index) {
 
 async function loadAnnotationForImage(index) {
     const imageFilename = state.imageFiles[index].name;
-
-    // 데이터는 이미 handleDirectorySelection에서 로드되었으므로, 해당 데이터를 사용하기만 하면 됩니다.
-    // 히스토리를 리셋하고 현재 상태를 첫 히스토리로 추가합니다.
     state.resetHistory();
 
     if (!state.annotationData[imageFilename]) {
-        // 만약의 경우 데이터가 없는 경우를 대비해 기본 구조를 생성합니다.
         state.updateAnnotationData(imageFilename, { image_path: imageFilename, objects: [] });
     }
 
-    // 현재 객체 상태를 히스토리에 추가합니다.
     const currentObjects = state.annotationData[imageFilename].objects;
     state.pushHistory(JSON.parse(JSON.stringify(currentObjects)));
 }
@@ -373,14 +258,13 @@ export async function saveAllAnnotationsToZip() {
                     }
                 });
 
-                const jsonString = JSON.stringify(output, null, 2);
                 const baseFilename = filename.replace(/\.[^/.]+$/, "");
 
-                // Add JSON file
-                zip.file(`${baseFilename}.json`, jsonString);
+                // JSON
+                zip.file(`${baseFilename}.json`, JSON.stringify(output, null, 2));
 
-                // Add YOLO TXT file
-                const yoloString = exportDataAsMfYoloPose(output);
+                // YOLO detection TXT
+                const yoloString = exportDataAsYoloDetection(output);
                 if (yoloString) {
                     zip.file(`${baseFilename}.txt`, yoloString);
                 }
@@ -390,12 +274,12 @@ export async function saveAllAnnotationsToZip() {
         const zipBlob = await zip.generateAsync({ type: "blob" });
         const a = Object.assign(document.createElement('a'), {
             href: URL.createObjectURL(zipBlob),
-            download: `annotations_${new Date().toISOString().slice(0,10)}.zip`
+            download: `annotations_${new Date().toISOString().slice(0, 10)}.zip`
         });
         a.click();
         URL.revokeObjectURL(a.href);
 
-        showNotification('모든 JSON 파일이 ZIP으로 저장되었습니다.', 'success', ui);
+        showNotification('모든 파일이 ZIP으로 저장되었습니다.', 'success', ui);
     } catch (error) {
         showNotification(`ZIP 생성 오류: ${error.message}`, 'error', ui);
         console.error("Failed to create ZIP file:", error);

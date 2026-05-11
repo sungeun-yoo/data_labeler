@@ -1,5 +1,5 @@
 // --- 전역 상태 및 설정 ---
-export let config = null;
+export let config = null; // string[] - class name array e.g. ["person", "car"]
 export let imageFiles = [];
 export let jsonFiles = [];
 export let currentImageIndex = -1;
@@ -9,20 +9,16 @@ export let history = [];
 export let currentHistoryIndex = -1;
 
 export const appState = {
-    mode: 'IDLE', // IDLE, DRAWING_BBOX, EDITING_POSE
+    mode: 'IDLE', // IDLE, DRAWING_BBOX
     selectedObjectIndex: -1,
-    selectedPointIndex: -1,
     drawingBboxStartPoint: null,
     currentBbox: null,
     isPanning: false,
-    isDraggingPoint: false,
     isResizingBbox: false,
     resizeHandle: null,
     lastPanPoint: { x: 0, y: 0 },
-    draggingPointInfo: { objIndex: -1, ptIndex: -1 },
     lastMouseWorldPos: null,
     isAltDown: false,
-    isCtrlDown: false,
     currentClass: null,
 };
 
@@ -66,7 +62,7 @@ export function pushHistory(state) {
         history.splice(currentHistoryIndex + 1);
     }
     history.push(state);
-    if (history.length > 31) { // Cap history size
+    if (history.length > 31) {
         history.shift();
     }
     currentHistoryIndex = history.length - 1;
@@ -91,7 +87,6 @@ export function hasChanges() {
 export function resetAppState() {
     appState.mode = 'IDLE';
     appState.selectedObjectIndex = -1;
-    appState.selectedPointIndex = -1;
     appState.drawingBboxStartPoint = null;
     appState.currentBbox = null;
     appState.lastMouseWorldPos = null;
